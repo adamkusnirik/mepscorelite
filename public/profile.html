@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MEP Score Profile | Individual MEP Activity Analysis</title>
+  <meta name="description" content="MEP Score profile: detailed activity and performance for any MEP. See score, rank, roles, votes, and engagement metrics.">
+  <meta name="keywords" content="MEP profile, European Parliament, MEP analysis, parliamentary activity, EU politics, democracy">
+  <meta name="author" content="MEPs Activity Explorer">
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://mepranking.eu/profile.html">
+  <meta property="og:title" content="MEP Score Profile | Individual MEP Activity Analysis">
+  <meta property="og:description" content="MEP Score profile: detailed activity and performance for any MEP.">
+  
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:url" content="https://mepranking.eu/profile.html">
+  <meta property="twitter:title" content="MEP Score Profile | Individual MEP Activity Analysis">
+  <meta property="twitter:description" content="MEP Score profile: detailed activity and performance for any MEP.">
+  
+  <!-- Canonical URL -->
+  <link rel="canonical" href="https://mepranking.eu/profile.html">
+  
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "MEP Profile",
+    "description": "Detailed profile and activity analysis of European Parliament member",
+    "url": "https://mepranking.eu/profile.html",
+    "mainEntity": {
+      "@type": "Organization",
+      "name": "MEPs Activity Explorer",
+      "description": "Platform for transparent evaluation of European Parliament member activity"
+    }
+  }
+  </script>
+  
+  <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <link rel="stylesheet" href="css/design-system.css">
+  <style>
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #f5f7fa;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    
+    /* Responsive typography */
+    @media (min-width: 768px) {
+      body {
+        font-size: 16px;
+      }
+    }
+    
+    .card {
+      background: white;
+      border-radius: 0.75rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      transition: all 0.2s ease;
+      margin-bottom: 1.5rem;
+    }
+    
+    .card:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem;
+      border-bottom: 1px solid #e5e7eb;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    
+    @media (min-width: 768px) {
+      .card-header {
+        padding: 1.25rem 1.5rem;
+        flex-wrap: nowrap;
+        gap: 0;
+      }
+    }
+    
+    .card-body {
+      padding: 1rem;
+    }
+    
+    @media (min-width: 768px) {
+      .card-body {
+        padding: 1.5rem;
+      }
+    }
+    
+    .profile-header-card {
+      background: linear-gradient(135deg, #2563eb 0%, #1e40af 50%, #3730a3 100%);
+      color: white;
+      position: relative;
+      overflow: hidden;
+      border: none;
+      box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3), 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    .profile-header-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.08'%3E%3Cpath d='m36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat;
+      opacity: 0.6;
+    }
+    
+    .profile-header-card .card-body {
+      padding: 2rem 2rem 2.5rem;
+    }
+    
+    @media (max-width: 767px) {
+      .profile-header-card .card-body {
+        padding: 1.5rem 1rem 2rem;
+      }
+      
+      .profile-header-card h1 {
+        font-size: 2rem !important;
+        line-height: 1.2;
+      }
+      
+      .profile-header-card .text-xl {
+        font-size: 1rem !important;
+      }
+      
+      .profile-header-card .text-lg {
+        font-size: 0.9rem !important;
+      }
+      
+      .profile-header-card img {
+        width: 6rem !important;
+        height: 6rem !important;
+      }
+    }
+    
+    /* Enhanced styling for performance indicators */
+    .performance-indicator.performance-high {
+      background: linear-gradient(45deg, #10b981, #34d399);
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+    }
+    
+    .performance-indicator.performance-medium {
+      background: linear-gradient(45deg, #f59e0b, #fbbf24);
+      box-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+    }
+    
+    .performance-indicator.performance-low {
+      background: linear-gradient(45deg, #ef4444, #f87171);
+      box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+    }
+    
+    /* Glassmorphism effect for badges */
+    .profile-header-card .inline-flex {
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    
+    /* Enhanced text readability on gradient background */
+    .profile-header-card #mep-subheader {
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    
+    @media (min-width: 768px) {
+      .profile-header-card #mep-subheader {
+        justify-content: flex-start;
+      }
+    }
+    
+    /* Ensure group display elements align properly within the subheader */
+    .profile-header-card #mep-subheader .group-display {
+      display: inline-flex !important;
+      align-items: center;
+      vertical-align: middle;
+      gap: 0.5rem; /* Add explicit gap for better spacing */
+    }
+    
+    .profile-header-card #mep-subheader .country-display {
+      display: inline-flex !important;
+      align-items: center;
+      vertical-align: middle;
+      gap: 0.5rem; /* Add explicit gap for better spacing */
+    }
+    
+    /* Ensure spacing between logo and text is consistent on the subheader
+       Use only flex gap, remove extra margins so country and group match */
+    .profile-header-card #mep-subheader .group-display span,
+    .profile-header-card #mep-subheader .country-display span {
+      margin-left: 0 !important;
+    }
+    
+    .profile-header-card #mep-national-party {
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+    
+    .breadcrumb {
+      background: white;
+      border-radius: 0.5rem;
+      padding: 0.75rem 1rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    @media (min-width: 768px) {
+      .breadcrumb {
+        padding: 1rem 2rem;
+        margin-bottom: 2rem;
+      }
+    }
+    
+    .breadcrumb a {
+      color: #2563eb;
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.15s ease;
+    }
+    
+    .breadcrumb a:hover {
+      color: #1d4ed8;
+      text-decoration: underline;
+    }
+    
+    .stat-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.75rem;
+    }
+    
+    @media (min-width: 640px) {
+      .stat-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+      }
+    }
+    
+    @media (min-width: 1024px) {
+      .stat-grid {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      }
+    }
+    
+    .stat-card {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 0.75rem;
+      padding: 1rem;
+      transition: all 0.2s ease;
+    }
+    
+    .stat-card:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .stat-card {
+      cursor: pointer;
+    }
+
+    .stat-card.clickable:hover {
+      border-color: #2563eb;
+    }
+    
+    .activity-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.75rem 1rem;
+      border-radius: 9999px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-right: 0.5rem;
+      margin-bottom: 0.5rem;
+      transition: all 0.15s ease;
+      border: 1px solid #e5e7eb;
+      min-height: 48px;
+      justify-content: center;
+    }
+    
+    @media (min-width: 768px) {
+      .activity-pill {
+        padding: 0.5rem 0.875rem;
+        font-size: 0.75rem;
+        margin-right: 0.375rem;
+        margin-bottom: 0.375rem;
+        min-height: auto;
+        justify-content: flex-start;
+      }
+    }
+    
+    .progress-bar {
+      height: 8px;
+      background: #f3f4f6;
+      border-radius: 4px;
+      overflow: hidden;
+      margin: 8px 0;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.8s ease-in-out;
+    }
+    
+    .progress-fill.performance-high {
+      background: linear-gradient(90deg, #10b981, #059669);
+    }
+    
+    .progress-fill.performance-medium {
+      background: linear-gradient(90deg, #f59e0b, #d97706);
+    }
+    
+    .progress-fill.performance-low {
+      background: linear-gradient(90deg, #ef4444, #dc2626);
+    }
+    
+    .performance-indicator {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      display: inline-block;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .performance-high {
+      background-color: #10b981;
+    }
+    
+    .performance-medium {
+      background-color: #f59e0b;
+    }
+    
+    .performance-low {
+      background-color: #ef4444;
+    }
+    
+    .rank-badge {
+      background-color: #e1effe;
+      color: #1e40af;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+    
+    .role-chip {
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 0.5rem;
+      padding: 0.75rem;
+      margin: 0.25rem;
+      transition: all 0.2s ease;
+    }
+    
+    .role-chip:hover {
+      background: #f3f4f6;
+      transform: translateY(-1px);
+    }
+    
+    .section-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 1rem;
+    }
+    
+    .avg-markers {
+      position: absolute;
+      top: -2px;
+      height: 12px;
+      width: 2px;
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 1px;
+    }
+
+    .detail-stats-card {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 0.5rem;
+      padding: 1rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .stats-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #1f2937;
+    }
+
+    .rank-info {
+      font-size: 0.75rem;
+      color: #6b7280;
+      font-weight: 500;
+    }
+
+    .averages-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+      font-size: 0.875rem;
+    }
+
+    /* Score Breakdown Modal Styles */
+    .score-breakdown-section {
+      margin-bottom: 2rem;
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+    }
+
+    .score-breakdown-section h3 {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+    }
+
+    .score-breakdown-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+      table-layout: fixed;
+    }
+
+    .score-breakdown-table th,
+    .score-breakdown-table td {
+      padding: 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid #e5e7eb;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      vertical-align: top;
+    }
+
+    .score-breakdown-table th:first-child,
+    .score-breakdown-table td:first-child {
+      width: 40%;
+    }
+
+    .score-breakdown-table th:nth-child(2),
+    .score-breakdown-table td:nth-child(2) {
+      width: 20%;
+      text-align: center;
+    }
+
+    .score-breakdown-table th:nth-child(3),
+    .score-breakdown-table td:nth-child(3) {
+      width: 25%;
+      text-align: center;
+    }
+
+    .score-breakdown-table th:nth-child(4),
+    .score-breakdown-table td:nth-child(4) {
+      width: 15%;
+      text-align: right;
+    }
+
+    .score-breakdown-table th {
+      background-color: #f9fafb;
+      font-weight: 600;
+      color: #374151;
+    }
+
+    .score-breakdown-table .category-total {
+      background-color: #f9fafb;
+      font-weight: 600;
+      border-top: 2px solid #6b7280;
+    }
+
+    .score-breakdown-table .category-total td {
+      color: #374151;
+    }
+
+    .axis-total {
+      background-color: #f3f4f6;
+      font-weight: 600;
+      border-top: 1px solid #d1d5db;
+    }
+
+    .final-score-row {
+      background-color: #374151;
+      color: white;
+      font-weight: 700;
+      border-top: 2px solid #374151;
+    }
+
+    .final-score-row td {
+      color: white;
+    }
+    
+    @media (max-width: 768px) {
+      .stat-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .profile-header .flex {
+        flex-direction: column;
+        text-align: center;
+      }
+    }
+    
+    /* Group logo styles */
+    .group-display, .country-display {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .group-logo {
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+    
+    .group-text {
+      font-weight: 500;
+    }
+    
+    /* Ensure both country and group text have the same styling */
+    .country-display span:last-child,
+    .group-display span:last-child {
+      color: white;
+      font-weight: 600;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Fallback for when logos fail to load */
+    .group-logo[style*="display: none"] + .group-text {
+      display: inline !important;
+    }
+    
+    /* Responsive group logo sizing */
+    @media (max-width: 480px) {
+      /* Mobile phones */
+      .group-display {
+        gap: 0.25rem;
+      }
+      .group-logo.h-6 {
+        height: 1rem !important; /* 4 */
+        width: auto;
+      }
+      .group-logo.h-4 {
+        height: 0.875rem !important; /* 3.5 */
+        width: auto;
+      }
+      .group-logo.h-8 {
+        height: 1.25rem !important; /* 5 */
+        width: auto;
+      }
+      .group-text {
+        font-size: 0.875rem;
+      }
+    }
+    
+    @media (min-width: 481px) and (max-width: 768px) {
+      /* Tablets */
+      .group-display {
+        gap: 0.5rem;
+      }
+      .group-logo.h-6 {
+        height: 1.125rem !important; /* 4.5 */
+        width: auto;
+      }
+      .group-logo.h-4 {
+        height: 0.9375rem !important; /* 3.75 */
+        width: auto;
+      }
+      .group-logo.h-8 {
+        height: 1.5rem !important; /* 6 */
+        width: auto;
+      }
+    }
+    
+    @media (min-width: 769px) and (max-width: 1024px) {
+      /* iPad landscape and small laptops */
+      .group-display {
+        gap: 0.5rem;
+      }
+    }
+    
+    /* Ensure table cells with group logos maintain proper alignment */
+    .group-cell .group-display {
+      justify-content: center;
+    }
+    
+    @media (max-width: 768px) {
+      .group-cell .group-display {
+        justify-content: flex-start;
+      }
+    }
+    
+    /* Country flag styles */
+    .country-display {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .country-flag {
+      line-height: 1;
+      display: inline-block;
+      text-align: center;
+    }
+    
+    /* Responsive country flag sizing */
+    @media (max-width: 480px) {
+      .country-display {
+        gap: 0.25rem;
+      }
+      .country-flag.text-base {
+        font-size: 0.875rem !important;
+      }
+      .country-flag.text-lg {
+        font-size: 1rem !important;
+      }
+    }
+    
+    @media (min-width: 481px) and (max-width: 768px) {
+      .country-display {
+        gap: 0.5rem;
+      }
+    }
+    
+    /* Enhanced SVG Logo Styling */
+    .logo-svg {
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+      transition: all 0.3s ease;
+    }
+    
+    .logo-svg:hover {
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15));
+      transform: translateY(-1px);
+    }
+    
+    /* Ensure crisp SVG rendering */
+    img[src$=".svg"] {
+      shape-rendering: geometricPrecision;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: crisp-edges;
+    }
+
+    /* Responsive table handling for score breakdown modal */
+    @media (max-width: 768px) {
+      .score-breakdown-table {
+        font-size: 0.75rem;
+      }
+      
+      .score-breakdown-table th,
+      .score-breakdown-table td {
+        padding: 0.5rem;
+      }
+
+      .score-breakdown-table th:first-child,
+      .score-breakdown-table td:first-child {
+        width: 35%;
+      }
+
+      .score-breakdown-table th:nth-child(2),
+      .score-breakdown-table td:nth-child(2) {
+        width: 18%;
+      }
+
+      .score-breakdown-table th:nth-child(3),
+      .score-breakdown-table td:nth-child(3) {
+        width: 30%;
+      }
+
+      .score-breakdown-table th:nth-child(4),
+      .score-breakdown-table td:nth-child(4) {
+        width: 17%;
+      }
+
+      /* Adjust modal for mobile */
+      #score-modal .bg-white {
+        max-w-none;
+        margin: 1rem;
+        max-h-[95vh];
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="bg-white shadow-sm sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16">
+        <div class="flex">
+          <div class="flex-shrink-0 flex items-center">
+            <a href="index.html" class="flex items-center">
+              <img src="./logos/mep_score.svg" alt="MEP Score Logo" class="logo-svg h-12 w-auto sm:h-16 lg:h-20 max-w-none">
+            </a>
+          </div>
+        </div>
+        <div class="flex items-center space-x-4">
+          <a href="index.html" class="nav-link">Home</a>
+          <a href="about.html" class="nav-link">About</a>
+          <a href="methodology.html" class="nav-link">Methodology</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Page Header -->
+  <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border-b">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div class="text-center">
+        <h1 class="text-4xl font-bold text-gray-900 mb-4">MEP Profile Analysis</h1>
+        <p class="text-xl text-gray-600 max-w-3xl mx-auto mb-6">
+          Detailed analysis of European Parliament member activity, performance metrics, and institutional roles
+        </p>
+        <div class="flex flex-wrap justify-center gap-4 text-sm text-gray-500">
+          <span><i class="fas fa-chart-line mr-1"></i>Performance metrics</span>
+          <span><i class="fas fa-users mr-1"></i>Role analysis</span>
+          <span><i class="fas fa-chart-bar mr-1"></i>Activity statistics</span>
+          <span><i class="fas fa-balance-scale mr-1"></i>Comparative data</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    
+    <!-- Breadcrumb -->
+    <div class="breadcrumb">
+      <nav class="flex" aria-label="Breadcrumb">
+        <ol class="inline-flex items-center space-x-1 md:space-x-3">
+          <li class="inline-flex items-center">
+            <a href="index.html" class="text-gray-700 hover:text-blue-600">
+              <i class="fas fa-home mr-2"></i>Home
+            </a>
+          </li>
+          <li>
+            <div class="flex items-center">
+              <i class="fas fa-chevron-right text-gray-400 mx-2"></i>
+              <span class="text-gray-500">MEP Profile</span>
+            </div>
+          </li>
+        </ol>
+      </nav>
+    </div>
+    
+    <!-- Loading State -->
+    <div id="loading-state" class="card">
+      <div class="card-body text-center">
+        <div class="flex items-center justify-center space-x-3">
+          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <span class="text-lg font-medium text-gray-600">Loading MEP data...</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Error State -->
+    <div id="error-state" class="card" style="display: none;">
+      <div class="card-body text-center text-red-600">
+        <i class="fas fa-exclamation-triangle text-4xl mb-4"></i>
+        <div id="error-message" class="text-lg font-medium"></div>
+      </div>
+    </div>
+    
+    <div id="profile-content" style="display: none;">
+      <!-- Profile Header Card -->
+      <div class="card profile-header-card">
+        <div class="card-body relative z-10">
+          <div class="flex flex-col md:flex-row items-center space-y-6 md:space-y-0 md:space-x-8">
+            <div class="relative flex-shrink-0">
+              <div class="relative">
+                <img id="mep-photo" alt="MEP Photo" 
+                     class="w-36 h-36 rounded-full border-4 border-white/20 shadow-xl object-cover backdrop-blur-sm"
+                     src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 150 150'%3E%3Crect width='150' height='150' fill='%23e5e7eb'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dominant-baseline='middle' font-family='Arial' font-size='48' fill='%239ca3af'%3E%3F%3C/text%3E%3C/svg%3E">
+                <div class="absolute -bottom-2 -right-2 bg-white rounded-full p-2 shadow-lg">
+                  <div id="activity-level" class="w-4 h-4 rounded-full performance-indicator performance-medium"></div>
+                </div>
+              </div>
+            </div>
+            <div class="text-center md:text-left flex-1 space-y-4">
+              <div>
+                <h1 id="mep-name" class="text-4xl md:text-5xl font-bold mb-2 tracking-tight">MEP Name</h1>
+                <p id="mep-subheader" class="text-white text-xl mb-1 font-medium">Country | Political Group</p>
+                <p id="mep-national-party" class="text-white/70 text-lg">National Party</p>
+              </div>
+              <div class="flex flex-wrap justify-center md:justify-start gap-3 items-center">
+                <span id="overall-rank" class="inline-flex items-center px-4 py-2 bg-white/10 backdrop-blur-sm border border-white/20 text-white font-semibold rounded-full text-sm shadow-lg">
+                  <i class="fas fa-trophy mr-2 text-yellow-300"></i>Loading...
+                </span>
+                <button id="score-breakdown-btn" class="inline-flex items-center px-4 py-2 bg-white/10 backdrop-blur-sm border border-white/20 text-white font-medium rounded-full text-sm hover:bg-white/20 transition-all duration-200 shadow-lg" style="display: none;" aria-label="View detailed score breakdown and analysis">
+                  <i class="fas fa-chart-pie mr-2"></i>Score Breakdown
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- Activity Statistics Card -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="section-title mb-0">Activity Statistics</h2>
+          <div class="text-sm text-gray-500">
+            Compared to EP, Group & Country averages
+          </div>
+          <div class="text-xs text-blue-600 mt-1 font-medium">
+            <i class="fas fa-chart-bar mr-1"></i>Progress bars show percentile ranking: 
+            <span class="text-green-600">■</span> Top third
+            <span class="text-yellow-600">■</span> Middle third  
+            <span class="text-red-600">■</span> Bottom third
+          </div>
+        </div>
+        <div class="card-body">
+          <div id="stats-grid" class="stat-grid">
+            <!-- Stats will be populated here by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Score Breakdown Card - removed as it will be shown in modal -->
+      <div id="score-breakdown-container" style="display: none;">
+        <!-- Score breakdown will be populated here by JS -->
+      </div>
+
+      <!-- Roles and Responsibilities Card -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="section-title mb-0">
+            <i class="fas fa-users text-blue-600 mr-2"></i>
+            Roles and Responsibilities
+          </h2>
+        </div>
+        <div class="card-body">
+          <div id="mep-roles-container">
+            <!-- Roles will be populated here by JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Score Breakdown Modal - Updated for unified score-breakdown.js module -->
+  <div id="score-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50" role="dialog" aria-labelledby="modal-mep-name" aria-modal="true" style="padding: 1rem;">
+    <div class="bg-white rounded-lg w-full flex flex-col" style="max-width: 56rem; max-height: 90vh; height: 90vh;">
+      <div class="flex items-center justify-between p-6 border-b" style="flex-shrink: 0;">
+        <h2 id="modal-mep-name" class="text-2xl font-bold text-gray-800">Score Breakdown</h2>
+        <button id="modal-close" class="btn btn-outline" style="padding: 0.5rem; border: none; background: none; font-size: 1.5rem;" aria-label="Close score breakdown modal">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="p-6" style="overflow-y: auto; flex: 1; min-height: 0;">
+        <div id="modal-content">
+          <!-- Score breakdown content will be populated here -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-gray-800 text-white mt-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div class="grid md:grid-cols-3 gap-8">
+        <div>
+          <h3 class="text-lg font-semibold mb-4">MEP Score</h3>
+          <p class="text-gray-300">
+            Transparent overview of activity of members of the European Parliament. Empowering citizens with objective information for democratic accountability.
+          </p>
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold mb-4">Useful Links</h3>
+          <ul class="space-y-2">
+            <li><a href="index.html" class="text-gray-300 hover:text-white transition-colors">MEP Score</a></li>
+            <li><a href="about.html" class="text-gray-300 hover:text-white transition-colors">About</a></li>
+            <li><a href="methodology.html" class="text-gray-300 hover:text-white transition-colors">Methodology</a></li>
+            <li><a href="https://parltrack.org" class="text-gray-300 hover:text-white transition-colors" target="_blank" rel="noopener">Parltrack</a></li>
+            <li><a href="https://europarl.europa.eu" class="text-gray-300 hover:text-white transition-colors" target="_blank" rel="noopener">European Parliament</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold mb-4">Contact</h3>
+          <p class="text-gray-300 text-sm">
+            If you notice any inaccuracies or have suggestions for improvement, please contact us at <a href="mailto:mepscore@gmail.com" class="text-blue-300 hover:text-blue-100 transition-colors">mepscore@gmail.com</a>
+          </p>
+        </div>
+      </div>
+      <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
+        <p class="mb-2">&copy; 2025 MEP Score. All rights reserved.</p>
+        <p class="text-xs">Informational only, no warranties; no liability for use or interpretation of the data; methodology may change.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Include Chart.js for potential charts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script type="module" src="js/score-breakdown.js"></script>
+  <script type="module" src="js/profile.js"></script>
+  <script type="module" src="js/sync-manager.js"></script>
+</body>
+</html> 

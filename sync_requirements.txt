@@ -1,0 +1,3 @@
+# Additional requirements for the synchronization system
+watchdog>=3.0.0  # File system monitoring
+flask-cors>=4.0.0  # CORS support for sync API

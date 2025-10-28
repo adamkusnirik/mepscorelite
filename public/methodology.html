@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MEP Score Methodology | Scoring System Explained</title>
+  <meta name="description" content="Complete MEP Score methodology: scoring framework, data sources, limitations, and transparent calculation methods for European Parliament member evaluation.">
+  <meta name="keywords" content="MEP ranking, European Parliament, methodology, legislative activity, transparency, parliamentary activity, EU politics, democracy, scoring system">
+  <meta name="author" content="Adam Kusnirik">
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://mepranking.eu/methodology.html">
+  <meta property="og:title" content="MEP Score Methodology | Scoring System Explained">
+  <meta property="og:description" content="Complete methodology for MEP Score: how scores are calculated across four activity categories with transparent data processing.">
+  
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:url" content="https://mepranking.eu/methodology.html">
+  <meta property="twitter:title" content="MEP Score Methodology | Scoring System Explained">
+  <meta property="twitter:description" content="Complete methodology for MEP Score: how scores are calculated across four activity categories with transparent data processing.">
+  
+  <!-- Canonical URL -->
+  <link rel="canonical" href="https://mepranking.eu/methodology.html">
+  
+  <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <link rel="stylesheet" href="./css/design-system.css">
+  <style>
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #f5f7fa;
+      font-size: 14px;
+      line-height: 1.5;
+      -webkit-text-size-adjust: 100%;
+    }
+    
+    @media (min-width: 768px) {
+      body {
+        font-size: 16px;
+      }
+    }
+    
+    .section-divider {
+      border-bottom: 1px solid #e5e7eb;
+      padding-bottom: 2rem;
+      margin-bottom: 2rem;
+    }
+    
+    .feature-highlight {
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+      border-left: 4px solid #0ea5e9;
+    }
+
+    .scoring-category {
+      background: linear-gradient(135deg, #fef7ff 0%, #f3e8ff 100%);
+      border-left: 4px solid #8b5cf6;
+    }
+
+    .data-source-card {
+      background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+      border-left: 4px solid #22c55e;
+    }
+    
+    /* Enhanced SVG Logo Styling */
+    .logo-svg {
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+      transition: all 0.3s ease;
+    }
+    
+    .logo-svg:hover {
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15));
+      transform: translateY(-1px);
+    }
+    
+    /* Ensure crisp SVG rendering */
+    img[src$=".svg"] {
+      shape-rendering: geometricPrecision;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: crisp-edges;
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="nav-primary sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16">
+        <div class="flex">
+          <div class="flex-shrink-0 flex items-center">
+            <a href="index.html" class="flex items-center">
+              <img src="./logos/mep_score.svg" alt="MEP Score Logo" class="logo-svg h-12 w-auto sm:h-16 lg:h-20 max-w-none">
+            </a>
+          </div>
+        </div>
+        <div class="flex items-center space-x-4">
+          <a href="index.html" class="nav-link">Home</a>
+          <a href="about.html" class="nav-link">About</a>
+          <a href="methodology.html" class="nav-link text-blue-600 font-semibold">Methodology</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Page Header -->
+  <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div class="text-center">
+        <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">MEP Score Methodology</h1>
+        <p class="text-lg text-gray-600 max-w-3xl mx-auto">
+          Transparent scoring system for European Parliament member activities based on open data, weighted by their importance in performing the European Parliament mandate
+        </p>
+        <div class="flex flex-wrap justify-center gap-6 mt-6 text-sm text-gray-500">
+          <span class="flex items-center"><i class="fas fa-calculator mr-2"></i>Transparent Calculation</span>
+          <span class="flex items-center"><i class="fas fa-sliders-h mr-2"></i>Customizable Weights</span>
+          <span class="flex items-center"><i class="fas fa-chart-line mr-2"></i>Dynamic Ranges</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+      
+      <!-- Sidebar Navigation -->
+      <div class="lg:col-span-1">
+        <div class="sticky top-24 bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <h3 class="font-semibold text-gray-900 mb-4">Table of Contents</h3>
+          <nav class="space-y-2">
+            <a href="#methodology" class="block text-sm text-gray-600 hover:text-blue-600 transition-colors">Philosophy</a>
+            <a href="#scoring-framework" class="block text-sm text-gray-600 hover:text-blue-600 transition-colors">4-Category System</a>
+            <a href="#custom-weights" class="block text-sm text-gray-600 hover:text-blue-600 transition-colors">Custom Weights</a>
+            <a href="#data-sources" class="block text-sm text-gray-600 hover:text-blue-600 transition-colors">Data Sources & Limitations</a>
+            <a href="#calculation-details" class="block text-sm text-gray-600 hover:text-blue-600 transition-colors">Final Score Calculation</a>
+            <a href="#limitations" class="block text-sm text-gray-600 hover:text-blue-600 transition-colors">Limitations & Disclaimer</a>
+            <a href="#legal-disclaimer" class="block text-sm text-gray-600 hover:text-blue-600 transition-colors">Legal Disclaimer</a>
+            <a href="#contact" class="block text-sm text-gray-600 hover:text-blue-600 transition-colors">Contact</a>
+          </nav>
+        </div>
+      </div>
+
+      <!-- Main Content -->
+      <div class="lg:col-span-3">
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 lg:p-8">
+          
+          <!-- Philosophy -->
+          <section id="methodology" class="section-divider">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">
+              <i class="fas fa-lightbulb mr-3 text-blue-600"></i>Philosophy
+            </h2>
+            
+            <div class="prose prose-gray max-w-none">
+              <p class="text-gray-700 leading-relaxed mb-4">
+                The weighting of individual indicators largely draws from the weights established by MEP Ranking, which was previously widely 
+                cited and recognized but is no longer operational, as well as from practical work experience in the European Parliament.
+              </p>
+
+              <div class="feature-highlight rounded-lg p-4 my-6">
+                <h3 class="font-semibold text-gray-900 mb-2">
+                  <i class="fas fa-lightbulb mr-2 text-blue-600"></i>Core Principles
+                </h3>
+                <p class="text-gray-700 mb-3">
+                  <strong>Reports and Opinions are the most important</strong>, as MEPs have the greatest impact on how legislation will look at the end - the highest possible gains. 
+                  This forms the foundation of our Legislative Production category, where MEPs can directly shape European Union law through their role as rapporteurs and opinion drafters.
+                </p>
+                <p class="text-gray-700 mb-3">
+                  <strong>Activity Indicators Scoring</strong> reflects the day-to-day parliamentary work that demonstrates MEP engagement and accountability. 
+                  These quantifiable activities show how actively MEPs participate in the democratic process through questions, speeches, and legislative amendments.
+                </p>
+                <p class="text-gray-700 mb-3">
+                  <strong>Institutional Roles</strong> recognize that some MEPs carry additional responsibilities beyond regular legislative work. 
+                  Leadership positions require extra time and effort, and the scoring system acknowledges this through carefully calibrated multipliers based on the Power × Scarcity principle.
+                </p>
+                <p class="text-gray-700">
+                  <strong>Attendance Penalty</strong> ensures that the fundamental duty of parliamentary participation is reflected in scores. 
+                  Democratic representation requires physical presence and participation in votes, making attendance a baseline requirement for effective MEP performance.
+                </p>
+              </div>
+
+              <div class="feature-highlight rounded-lg p-4 my-6">
+                <h3 class="font-semibold text-gray-900 mb-2">
+                  <i class="fas fa-eye mr-2 text-blue-600"></i>Transparency Commitment
+                </h3>
+                <p class="text-gray-700">
+                  The methodology is transparent. All data processing and calculation methods are documented and verifiable, ensuring accountability 
+                  and enabling independent verification of results.
+                </p>
+                <p class="text-gray-700">
+                  We strive to identify potential errors and correct them after verification.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <!-- Scoring Framework -->
+          <section id="scoring-framework" class="section-divider">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">
+              <i class="fas fa-chart-bar mr-3 text-blue-600"></i>4-Category System
+            </h2>
+
+            <p class="text-gray-700 leading-relaxed mb-6">
+              MEP evaluation is based on four distinct categories of parliamentary activity. Each category measures different aspects of MEP performance to provide a better assessment.
+            </p>
+
+            <!-- Legislative Production -->
+            <div class="scoring-category rounded-lg p-4 mb-6">
+              <h3 class="text-xl font-semibold mb-3 text-gray-800 flex items-center">
+                <i class="fas fa-gavel mr-2"></i>1. Legislative Production
+              </h3>
+              <p class="text-gray-700 mb-4">
+                <strong>Philosophy:</strong> Legislative Production represents the core function of any parliamentarian - creating, shaping, and improving laws. In the European Parliament, this happens primarily through the report system, where MEPs serve as rapporteurs (lead authors) or shadow rapporteurs (opposition perspectives) for legislative files. <strong>Reports and Opinions are the most important</strong>, as MEPs have the greatest impact on how legislation will look at the end - the highest possible gains.
+              </p>
+              <p class="text-gray-700 mb-4">
+                Rapporteurs draft the Parliament's position on proposed legislation, conduct negotiations with other institutions, and guide the legislative file through the parliamentary process. Shadow rapporteurs provide alternative viewpoints and ensure political balance. Opinion rapporteurs contribute specialized committee expertise to legislation outside their committee's primary competence.
+              </p>
+              <p class="text-gray-700 mb-4">
+                Amendments represent the detailed work of legislative improvement, where MEPs propose specific textual changes to make laws more effective, clearer, or better aligned with European values. This granular legislative work directly influences the final shape of EU law.
+              </p>
+              <p class="text-gray-700 mb-4">
+                <strong>Measurement:</strong> This category combines reports, opinions, and amendments into a single score reflecting the MEP's contribution to EU lawmaking.
+              </p>
+              
+              <h4 class="text-lg font-semibold mb-3">Reports & Opinions</h4>
+              <div class="overflow-x-auto">
+                <table class="w-full border-collapse border border-gray-300 mb-4 text-sm">
+                  <thead>
+                    <tr class="bg-gray-50">
+                      <th class="border border-gray-300 px-3 py-2 text-left">Report Role</th>
+                      <th class="border border-gray-300 px-3 py-2 text-left">Points</th>
+                      <th class="border border-gray-300 px-3 py-2 text-left">Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="border border-gray-300 px-3 py-2">Rapporteur</td>
+                      <td class="border border-gray-300 px-3 py-2 font-semibold">4.0</td>
+                      <td class="border border-gray-300 px-3 py-2">Lead author of report</td>
+                    </tr>
+                    <tr>
+                      <td class="border border-gray-300 px-3 py-2">Shadow Rapporteur</td>
+                      <td class="border border-gray-300 px-3 py-2 font-semibold">1.0</td>
+                      <td class="border border-gray-300 px-3 py-2">Opposition/alternative perspective</td>
+                    </tr>
+                    <tr>
+                      <td class="border border-gray-300 px-3 py-2">Opinion Rapporteur</td>
+                      <td class="border border-gray-300 px-3 py-2 font-semibold">1.0</td>
+                      <td class="border border-gray-300 px-3 py-2">Committee opinion on report</td>
+                    </tr>
+                    <tr>
+                      <td class="border border-gray-300 px-3 py-2">Opinion Shadow</td>
+                      <td class="border border-gray-300 px-3 py-2 font-semibold">0.5</td>
+                      <td class="border border-gray-300 px-3 py-2">Shadow for committee opinion</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              
+              <h4 class="text-lg font-semibold mt-4 mb-2">Amendments submitted in Committees</h4>
+              <p class="text-gray-700 mb-3">
+                Amendments are legislative proposals to modify existing draft legislation during the committee stage. This is where MEPs can directly influence the final shape of EU laws by proposing specific changes, additions, or deletions to legislative texts.
+              </p>
+              <div class="mt-2 text-xs text-gray-600 mb-4">
+                <strong>Scoring:</strong> Outlier-based (0-4 points)
+              </div>
+              
+              <h4 class="text-lg font-semibold mt-4 mb-2">Activity Indicators Scoring</h4>
+              <p class="text-gray-700 mb-3">
+                Activity indicators (such as Amendments, Written Questions, Oral Questions, Explanations of Vote, Plenary Speeches, and Motions) are evaluated using an <strong>outlier-based scoring system with logarithmic scaling</strong> (0-4 points). This statistical approach ensures fair comparison within each parliamentary term while automatically adapting to data distribution.
+              </p>
+              
+              <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
+                <h5 class="font-semibold text-gray-800 mb-3">
+                  <i class="fas fa-chart-line mr-2"></i>Outlier-Based Scoring Method
+                </h5>
+                <div class="space-y-3 text-sm text-gray-700">
+                  <div>
+                    <strong>1. Outlier Detection (IQR Method):</strong>
+                    <ul class="list-disc ml-6 mt-2">
+                      <li>Calculate Q1 (25th percentile), Q3 (75th percentile), and IQR = Q3 - Q1</li>
+                      <li>Lower bound = Q1 - 1.5 × IQR</li>
+                      <li>Upper bound = Q3 + 1.5 × IQR</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <strong>2. Scoring Rules:</strong>
+                    <ul class="list-disc ml-6 mt-2">
+                      <li><strong>Below lower bound:</strong> 0 points (outlier low activity)</li>
+                      <li><strong>Above upper bound:</strong> 4 points (outlier high activity)</li>
+                      <li><strong>Within normal range:</strong> Logarithmic scaling from 0 to 4 points</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <strong>3. Logarithmic Formula:</strong>
+                    <div class="bg-white p-3 rounded border mt-2 font-mono text-center">
+                      score = log₂(1 + normalized) × 4
+                    </div>
+                    <p class="mt-2 text-xs">Where normalized = (value - min) / (max - min) using clean data after outlier removal</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
+                <h5 class="font-semibold text-gray-800 mb-3">
+                  <i class="fas fa-calculator mr-2"></i>Benefits of Outlier-Based Scoring
+                </h5>
+                <ul class="text-sm text-gray-700 space-y-2">
+                  <li><strong>Automatic Adaptation:</strong> No need for manual threshold adjustments between terms</li>
+                  <li><strong>Statistical Robustness:</strong> Uses proven IQR method for outlier detection</li>
+                  <li><strong>Fair Distribution:</strong> Ensures meaningful score differentiation across all activity levels</li>
+                  <li><strong>Smooth Scaling:</strong> Logarithmic function provides natural growth curves</li>
+                  <li><strong>Term Independence:</strong> Each term is analyzed separately for fair historical comparison</li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- Control & Transparency -->
+            <div class="scoring-category rounded-lg p-4 mb-6">
+              <h3 class="text-xl font-semibold mb-3 text-gray-800 flex items-center">
+                <i class="fas fa-search mr-2"></i>2. Control & Transparency
+              </h3>
+              <p class="text-gray-700 mb-4">
+                <strong>Philosophy:</strong> Parliamentary democracy requires robust oversight of executive power. MEPs exercise democratic control through various questioning mechanisms that hold the European Commission, Council, and other EU institutions accountable to citizens. This category measures the watchdog function of parliament.
+              </p>
+              <p class="text-gray-700 mb-4">
+                Written questions allow MEPs to seek detailed information on EU policies, spending, and decision-making processes. They create a permanent record of institutional accountability and often reveal important information about EU operations that might otherwise remain opaque.
+              </p>
+              <p class="text-gray-700 mb-4">
+                Oral questions during plenary sessions provide real-time scrutiny of EU executives, forcing public responses to important issues and concerns raised by elected representatives.
+              </p>
+              <p class="text-gray-700 mb-4">
+                Explanations of vote demonstrate transparency in the democratic process, showing citizens why their representatives voted in specific ways on important legislation. This builds democratic accountability between MEPs and their constituents.
+              </p>
+              <p class="text-gray-700 mb-4">
+                <strong>Measurement:</strong> All indicators use outlier-based scoring for fair cross-term comparison, recognizing that oversight intensity varies across different parliamentary terms.
+              </p>
+              
+              <div class="space-y-4">
+                <div class="grid md:grid-cols-3 gap-4">
+                  <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                    <h5 class="font-semibold text-gray-800 mb-2">Written Questions</h5>
+                    <p class="text-sm text-gray-700">Written questions submitted by MEPs to EU institutions for official written responses. These allow MEPs to seek detailed information and hold institutions accountable through documented exchanges.</p>
+                    <div class="mt-2 text-xs text-gray-600">
+                      <strong>Scoring:</strong> Outlier-based (0-4 points)
+                    </div>
+                  </div>
+                  
+                  <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                    <h5 class="font-semibold text-gray-800 mb-2">Oral Questions</h5>
+                    <p class="text-sm text-gray-700">Formal questions for oral answer with debate, addressed to EU institutions. These can be tabled by committees, political groups, or groups of MEPs to bring important issues to parliamentary debate.</p>
+                    <div class="mt-2 text-xs text-gray-600">
+                      <strong>Scoring:</strong> Outlier-based (0-4 points)
+                    </div>
+                  </div>
+                  
+                  <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                    <h5 class="font-semibold text-gray-800 mb-2">Explanations of Vote</h5>
+                    <p class="text-sm text-gray-700">Written or oral statements explaining voting positions on specific measures</p>
+                    <div class="mt-2 text-xs text-gray-600">
+                      <strong>Scoring:</strong> Outlier-based (0-4 points)
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Engagement & Presence -->
+            <div class="scoring-category rounded-lg p-4 mb-6">
+              <h3 class="text-xl font-semibold mb-3 text-gray-800 flex items-center">
+                <i class="fas fa-users mr-2"></i>3. Engagement & Presence
+              </h3>
+              <p class="text-gray-700 mb-4">
+                <strong>Philosophy:</strong> Democracy requires active debate and public discourse. This category measures how actively MEPs participate in parliamentary discussions and contribute to the European political conversation. Speaking in plenary sessions demonstrates engagement with EU-wide issues and helps shape public understanding of European policies.
+              </p>
+              <p class="text-gray-700 mb-4">
+                Plenary speeches allow MEPs to articulate positions, challenge proposals, and represent their constituents' views in the broader European debate. These contributions to parliamentary discourse help form public opinion and influence the direction of European integration.
+              </p>
+              <p class="text-gray-700 mb-4">
+                Motions for resolutions enable MEPs to raise important issues that might not otherwise receive parliamentary attention. These initiatives demonstrate proactive engagement with emerging challenges and help set the European political agenda.
+              </p>
+              <p class="text-gray-700 mb-4">
+                <strong>Measurement:</strong> All indicators use outlier-based scoring for consistent evaluation across different parliamentary terms and political contexts.
+              </p>
+              
+              <div class="space-y-4">
+                <div class="grid md:grid-cols-2 gap-4">
+                  <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                    <h5 class="font-semibold text-gray-800 mb-2">Plenary Speeches</h5>
+                    <p class="text-sm text-gray-700">Speeches delivered during plenary sessions of the European Parliament</p>
+                    <div class="mt-2 text-xs text-gray-600">
+                      <strong>Scoring:</strong> Outlier-based (0-4 points)
+                    </div>
+                  </div>
+                  
+                  <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                    <h5 class="font-semibold text-gray-800 mb-2">Motions for Resolutions</h5>
+                    <p class="text-sm text-gray-700">Proposals for Parliament resolutions on various topics and issues</p>
+                    <div class="mt-2 text-xs text-gray-600">
+                      <strong>Scoring:</strong> Outlier-based (0-4 points)
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Institutional Roles -->
+            <div class="scoring-category rounded-lg p-4 mb-6">
+              <h3 class="text-xl font-semibold mb-3 text-gray-800 flex items-center">
+                <i class="fas fa-crown mr-2"></i>4. Institutional Roles
+              </h3>
+              <p class="text-gray-700 mb-4">
+                <strong>Philosophy:</strong> Democratic institutions require leadership and specialized expertise. MEPs who accept institutional roles take on additional responsibilities that extend beyond regular legislative duties. These positions involve chairing meetings, coordinating between political groups, managing parliamentary business, and representing the Parliament in external relations. The scoring system recognizes this additional workload while maintaining proportionality.
+              </p>
+              <p class="text-gray-700 mb-4">
+                Institutional roles are applied as percentage multipliers using the Power × Scarcity heuristic, which balances the authority level of a position against how few MEPs can hold it.
+              </p>
+              
+              <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
+                <h4 class="font-semibold text-gray-800 mb-2">Power × Scarcity Heuristic</h4>
+                <p class="text-sm text-gray-700 mb-2">
+                  <strong>bonus ≈ relative authority / share of MEPs in role</strong>
+                </p>
+                <p class="text-xs text-gray-700">
+                  The rarer and more powerful the office, the bigger the premium. Roles that can alter legislation 
+                  (President, Committee Chair) are weighted highest. Administrative roles (Quaestor) or diplomatic 
+                  roles (delegations) receive discounts.
+                </p>
+              </div>
+              
+              <div class="overflow-x-auto">
+                <table class="w-full border-collapse border border-gray-300 mb-4 text-sm">
+                  <thead>
+                    <tr class="bg-gray-50">
+                      <th class="border border-gray-300 px-3 py-2 text-left">Position</th>
+                      <th class="border border-gray-300 px-3 py-2 text-left">Bonus Multiplier</th>
+                      <th class="border border-gray-300 px-3 py-2 text-left">Rationale</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="border border-gray-300 px-3 py-2">EP President</td>
+                      <td class="border border-gray-300 px-3 py-2 font-semibold">+100%</td>
+                      <td class="border border-gray-300 px-3 py-2">Highest authority, unique position (1/720 MEPs)*</td>
+                    </tr>
+                    <tr>
+                      <td class="border border-gray-300 px-3 py-2">EP Vice-President</td>
+                      <td class="border border-gray-300 px-3 py-2 font-semibold">+60%</td>
+                      <td class="border border-gray-300 px-3 py-2">High authority, very rare (~14/720 MEPs)*</td>
+                    </tr>
+                    <tr>
+                      <td class="border border-gray-300 px-3 py-2">Committee Chair</td>
+                      <td class="border border-gray-300 px-3 py-2 font-semibold">+60%</td>
+                      <td class="border border-gray-300 px-3 py-2">High legislative power, rare (~20/720 MEPs)*</td>
+                    </tr>
+                    <tr>
+                      <td class="border border-gray-300 px-3 py-2">Quaestor</td>
+                      <td class="border border-gray-300 px-3 py-2 font-semibold">+35%</td>
+                      <td class="border border-gray-300 px-3 py-2">Administrative role, limited legislative impact</td>
+                    </tr>
+                    <tr>
+                      <td class="border border-gray-300 px-3 py-2">Committee Vice-Chair</td>
+                      <td class="border border-gray-300 px-3 py-2 font-semibold">+30%</td>
+                      <td class="border border-gray-300 px-3 py-2">Moderate authority in committees</td>
+                    </tr>
+                    <tr>
+                      <td class="border border-gray-300 px-3 py-2">Delegation Chair</td>
+                      <td class="border border-gray-300 px-3 py-2 font-semibold">+20%</td>
+                      <td class="border border-gray-300 px-3 py-2">Diplomatic role, lower legislative impact</td>
+                    </tr>
+                    <tr>
+                      <td class="border border-gray-300 px-3 py-2">Delegation Vice-Chair</td>
+                      <td class="border border-gray-300 px-3 py-2 font-semibold">+10%</td>
+                      <td class="border border-gray-300 px-3 py-2">Minor diplomatic responsibilities</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              
+              <div class="bg-white border border-gray-300 rounded-lg p-4 font-mono text-sm">
+                <strong>Role multiplier calculation:</strong><br>
+                institutional_roles_multiplier = 1 + highest_role_percentage<br>
+                <em>(Only the highest role bonus is applied to avoid double-counting)</em>
+              </div>
+              
+              <div class="text-xs text-gray-600 mt-4">
+                <em>*Maximum number of MEPs has changed over the years: 751 (8th term), 705 (9th term post-Brexit), 720 (10th term).</em>
+              </div>
+            </div>
+
+          <!-- Attendance Penalty Section -->
+          <section id="attendance-penalty" class="section-divider">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">
+              <i class="fas fa-user-check mr-3 text-blue-600"></i>Attendance Penalty
+            </h2>
+            
+            <div class="feature-highlight rounded-lg p-4 mb-6">
+              <h3 class="text-lg font-semibold mb-3 flex items-center">
+                <i class="fas fa-lightbulb text-blue-600 mr-2"></i>Philosophy
+              </h3>
+              <p class="text-gray-700 mb-4">
+                Democratic representation fundamentally requires presence. Citizens elect MEPs to represent their interests in the European Parliament, which means physically attending sessions and participating in votes. While the quality of participation matters, quantity of attendance serves as a baseline indicator of democratic commitment.
+              </p>
+              <p class="text-gray-700 mb-4">
+                Attendance penalties reflect the principle that consistent absence undermines the democratic mandate. MEPs who regularly miss plenary sessions cannot effectively represent their constituents' interests, regardless of their other activities. The penalty system is designed with reasonable thresholds that account for legitimate absences while penalizing systematic non-participation.
+              </p>
+            </div>
+            
+            <div class="bg-gray-50 rounded-lg p-4 mb-6">
+              <h3 class="text-lg font-semibold mb-3">Implementation</h3>
+              <p class="text-gray-700 mb-4">
+                Parliamentary attendance is measured through participation in plenary votes. Attendance rates below certain thresholds result in score penalties applied to the final score after all other calculations.
+              </p>
+              
+              <div class="overflow-x-auto">
+                <table class="w-full border-collapse border border-gray-300 mb-4 text-sm">
+                  <thead>
+                    <tr class="bg-gray-50">
+                      <th class="border border-gray-300 px-3 py-2 text-left">Attendance Level</th>
+                      <th class="border border-gray-300 px-3 py-2 text-left">Score Penalty</th>
+                      <th class="border border-gray-300 px-3 py-2 text-left">Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="border border-gray-300 px-3 py-2">75% and above</td>
+                      <td class="border border-gray-300 px-3 py-2 font-semibold">No penalty</td>
+                      <td class="border border-gray-300 px-3 py-2">Good attendance - no score reduction</td>
+                    </tr>
+                    <tr>
+                      <td class="border border-gray-300 px-3 py-2">Lower than 75%</td>
+                      <td class="border border-gray-300 px-3 py-2 font-semibold">Score × 0.75</td>
+                      <td class="border border-gray-300 px-3 py-2">25% score reduction</td>
+                    </tr>
+                    <tr>
+                      <td class="border border-gray-300 px-3 py-2">Lower than 55%</td>
+                      <td class="border border-gray-300 px-3 py-2 font-semibold">Score × 0.5</td>
+                      <td class="border border-gray-300 px-3 py-2">50% score reduction</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              
+              <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mt-4">
+                <h5 class="font-semibold text-gray-800 mb-2">
+                  <i class="fas fa-gavel mr-2"></i>Attendance Penalty Exemptions
+                </h5>
+                <p class="text-gray-700 text-sm">
+                  <strong>Only EP Chair and Vice Chair are exempt</strong> from attendance penalties as they usually do not participate in votes when presiding over plenary sessions.
+                </p>
+              </div>
+            </div>
+          </section>
+
+            <div class="bg-white border border-gray-300 rounded-lg p-4 font-mono text-sm mb-4">
+              <strong>Note:</strong> Term-specific ranges ensure fair comparison within each parliamentary term while accounting for significant activity variations between terms (e.g., amendment activity in Term 8 averaged 906 vs. 268 in Term 10).
+            </div>
+            
+            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mt-4">
+              <h5 class="font-semibold text-gray-800 mb-2">
+                <i class="fas fa-info-circle mr-2"></i>Why Term-Specific Ranges?
+              </h5>
+              <ul class="list-disc pl-6 space-y-1 text-gray-700 text-sm">
+                <li><strong>Dramatic variations:</strong> Activity levels vary by over 1000% between some terms</li>
+                <li><strong>Term completion:</strong> Current Term 10 shows lower activity due to incomplete duration</li>
+                <li><strong>Fair comparison:</strong> MEPs should be evaluated against their contemporaries, not across different parliamentary contexts</li>
+                <li><strong>Data-driven ranges:</strong> Ranges based on quartile analysis of actual parliamentary activity data</li>
+              </ul>
+            </div>
+          </section>
+
+          <!-- Custom Weights -->
+          <section id="custom-weights" class="section-divider">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">
+              <i class="fas fa-sliders-h mr-3 text-blue-600"></i>Custom Weights
+            </h2>
+
+            <div class="feature-highlight rounded-lg p-4 mb-6">
+              <h3 class="font-semibold text-gray-900 mb-2">Personalized Rankings</h3>
+              <p class="text-gray-700">
+                The weighting of individual indicators is largely subjective; therefore, the interface includes the ability 
+                to adjust the weighting of individual indicator groups according to your preferences. This allows users to 
+                create personalized rankings based on what they consider most important in MEP performance.
+              </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h3 class="font-semibold text-gray-900 mb-3">How It Works</h3>
+                <ul class="list-disc pl-6 space-y-2 text-gray-700 text-sm">
+                  <li>Adjust weights for each of the four main categories</li>
+                  <li>Real-time recalculation of scores and rankings</li>
+                  <li>Save and share your custom methodology</li>
+                  <li>Compare different weighting approaches</li>
+                </ul>
+              </div>
+              
+              <div>
+                <h3 class="font-semibold text-gray-900 mb-3">Use Cases</h3>
+                <ul class="list-disc pl-6 space-y-2 text-gray-700 text-sm">
+                  <li>Emphasize legislative productivity over speeches</li>
+                  <li>Prioritize attendance and participation</li>
+                  <li>Focus on leadership roles and responsibilities</li>
+                  <li>Create balanced or specialized evaluations</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          <!-- Data Sources -->
+          <section id="data-sources" class="section-divider">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">
+              <i class="fas fa-database mr-3 text-blue-600"></i>Data Sources & Limitations
+            </h2>
+            
+            <div class="data-source-card rounded-lg p-4 mb-6">
+              <h3 class="font-semibold text-gray-900 mb-3">
+                <i class="fas fa-source mr-2 text-green-600"></i>Primary Data Source: ParlTrack.eu
+              </h3>
+              <p class="text-gray-700 text-sm mb-3">
+                All data is sourced from ParlTrack.eu, which provides officially sourced European Parliament data 
+                including votes, amendments, reports, speeches, and MEP activities across parliamentary terms.
+              </p>
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                <div class="text-center">
+                  <i class="fas fa-file-alt text-2xl text-green-600 mb-2"></i>
+                  <p class="text-xs text-gray-700">Reports & Opinions</p>
+                </div>
+                <div class="text-center">
+                  <i class="fas fa-microphone text-2xl text-green-600 mb-2"></i>
+                  <p class="text-xs text-gray-700">Speeches</p>
+                </div>
+                <div class="text-center">
+                  <i class="fas fa-edit text-2xl text-green-600 mb-2"></i>
+                  <p class="text-xs text-gray-700">Amendments</p>
+                </div>
+                <div class="text-center">
+                  <i class="fas fa-vote-yea text-2xl text-green-600 mb-2"></i>
+                  <p class="text-xs text-gray-700">Vote Records</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="bg-gray-50 rounded-lg p-4">
+                <h3 class="font-semibold text-gray-900 mb-3">
+                  <i class="fas fa-calendar mr-2 text-blue-600"></i>Coverage Period
+                </h3>
+                <p class="text-gray-700 text-sm">
+                  <strong>8th Term:</strong> 2014-2019<br>
+                  <strong>9th Term:</strong> 2019-2024<br>
+                  <strong>10th Term:</strong> 2024-current<br>
+                  <em>Last update: July 23rd 2025</em>
+                </p>
+              </div>
+              
+              <div class="bg-gray-50 rounded-lg p-4">
+                <h3 class="font-semibold text-gray-900 mb-3">
+                  <i class="fas fa-info-circle mr-2 text-blue-600"></i>Important Notes
+                </h3>
+                <ul class="text-gray-700 text-sm space-y-1">
+                  <li><strong>New 4-Category System:</strong> This updated methodology replaces previous approaches</li>
+                  <li><strong>Quantitative Focus:</strong> Current method considers quantitative aspects of parliamentary activity</li>
+                  <li><strong>Transparency:</strong> All calculations are based on publicly available data</li>
+                  <li><strong>Power × Scarcity:</strong> Role bonuses reflect both authority and rarity of positions</li>
+                  <li><strong>Data-Driven:</strong> Scoring parameters calibrated based on current EP data patterns</li>
+                </ul>
+                <p class="text-gray-700 text-sm mt-2">
+                  Each final score calculation can be verified in the MEP's profile or by clicking on their score in the table on the homepage
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <!-- Calculation Details -->
+          <section id="calculation-details" class="section-divider">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">
+              <i class="fas fa-calculator mr-3 text-blue-600"></i>Final Score Calculation
+            </h2>
+
+            <p class="text-gray-700 mb-6">
+              The final score calculation follows a sequential process involving category scoring, role multipliers, and attendance considerations.
+            </p>
+            
+            <div class="bg-white border border-gray-300 rounded-lg p-4 font-mono text-sm mb-6">
+              <strong>1. Calculate category scores:</strong><br><br>
+              legislative_production = reports_score + amendments_score<br>
+              control_transparency = oral_questions_score + written_questions_score + explanations_score<br>
+              engagement_presence = speeches_score + motions_score<br><br>
+              
+              <strong>2. Base score calculation:</strong><br><br>
+              base_score = legislative_production + control_transparency + engagement_presence<br><br>
+              
+              <strong>3. Apply institutional roles multiplier:</strong><br><br>
+              score_with_roles = base_score × institutional_roles_multiplier<br>
+              <em>where institutional_roles_multiplier = 1 + highest_role_percentage</em><br><br>
+              
+              <strong>4. Apply attendance penalty:</strong><br><br>
+              final_score = score_with_roles × attendance_penalty<br>
+              <em>where attendance_penalty = 1.0 (≥75%), 0.75 (<75%), or 0.5 (<55%)</em>
+            </div>
+            
+            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <h4 class="font-semibold text-gray-800 mb-2">
+                <i class="fas fa-exclamation-triangle mr-2"></i>Beta Disclaimer
+              </h4>
+              <p class="text-gray-700">
+                This is a beta version of our scoring methodology. Parameters and calculations may be adjusted based on ongoing analysis, feedback, and methodological improvements. We welcome constructive feedback to help refine the system.
+              </p>
+            </div>
+          </section>
+
+          <!-- Limitations -->
+          <section id="limitations" class="section-divider">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">
+              <i class="fas fa-exclamation-triangle mr-3 text-gray-600"></i>Limitations & Disclaimer
+            </h2>
+            
+            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
+              <h3 class="font-semibold text-gray-800 mb-3">Important Notice</h3>
+              <p class="text-gray-700">
+                This evaluation represents only a quantitative view of MEP activity and <strong>cannot replace comprehensive assessment of work quality</strong>. 
+                Higher scores do not automatically mean better politicians.
+              </p>
+            </div>
+            
+            <h3 class="text-lg font-semibold mb-3">What the system does not consider:</h3>
+            <ul class="list-disc pl-6 space-y-2 text-gray-700 mb-6">
+              <li><strong>Quality of legislative proposals</strong> - we evaluate quantity, not quality</li>
+              <li><strong>Political background and contexts</strong> - the system is politically neutral</li>
+              <li><strong>Work outside EP</strong> - activity in home countries or other organizations</li>
+              <li><strong>Unofficial activities</strong> - lobbying, informal negotiations, media appearances</li>
+              <li><strong>Strategic voting</strong> - reasons and contexts of voting decisions</li>
+              <li><strong>Specializations</strong> - some areas require less but higher quality work</li>
+            </ul>
+            
+            <div class="feature-highlight rounded-lg p-4 mb-6">
+              <h3 class="text-lg font-semibold mb-3">Recommended Usage</h3>
+              <ul class="list-disc pl-6 space-y-2">
+                <li>As one of several tools for evaluating MEPs</li>
+                <li>To identify particularly active or inactive members</li>
+                <li>To compare activity within countries or political groups</li>
+                <li>As a complement to qualitative assessment of political content</li>
+              </ul>
+            </div>
+          </section>
+
+          <!-- Legal Disclaimer -->
+          <section id="legal-disclaimer" class="section-divider">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">
+              <i class="fas fa-balance-scale mr-3 text-red-600"></i>Legal Disclaimer
+            </h2>
+
+            <div class="bg-red-50 border border-red-200 rounded-lg p-6">
+              <p class="text-gray-700 mb-4 font-semibold">
+                The MEP Score and all related materials are provided for general information only. No warranties are given and no liability is accepted for any loss arising from the use or interpretation of the data, to the fullest extent permitted by applicable law.
+              </p>
+              
+              <div class="space-y-4">
+                <div>
+                  <h4 class="font-semibold text-gray-800 mb-2">
+                    <i class="fas fa-info-circle mr-2"></i>Informational use only
+                  </h4>
+                  <p class="text-gray-700 text-sm">
+                    The website, methodology, and scores are not official statistics, professional advice, or recommendations. Do not rely on them as the sole basis for decisions.
+                  </p>
+                </div>
+                
+                <div>
+                  <h4 class="font-semibold text-gray-800 mb-2">
+                    <i class="fas fa-database mr-2"></i>Data sources and errors
+                  </h4>
+                  <p class="text-gray-700 text-sm">
+                    The dataset is derived mainly from ParlTrack.eu and processed further. Despite extensive manual checks, the data may contain errors, omissions, or delays. Please report issues to <a href="mailto:mepscore@gmail.com" class="text-blue-600 hover:text-blue-800 transition-colors">mepscore@gmail.com</a>.
+                  </p>
+                </div>
+                
+                <div>
+                  <h4 class="font-semibold text-gray-800 mb-2">
+                    <i class="fas fa-shield-alt mr-2"></i>No warranties
+                  </h4>
+                  <p class="text-gray-700 text-sm">
+                    The service is provided on an "as is" and "as available" basis without any express or implied warranties (including accuracy, completeness, or fitness for a particular purpose).
+                  </p>
+                </div>
+                
+                <div>
+                  <h4 class="font-semibold text-gray-800 mb-2">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>Limitation of liability
+                  </h4>
+                  <p class="text-gray-700 text-sm">
+                    To the maximum extent permitted by applicable law, the author and operator are not liable for any direct, indirect, incidental, consequential, or other losses arising from use of, reliance on, or misinterpretation of the data or methodology.
+                  </p>
+                </div>
+                
+                <div>
+                  <h4 class="font-semibold text-gray-800 mb-2">
+                    <i class="fas fa-cogs mr-2"></i>Methodology changes
+                  </h4>
+                  <p class="text-gray-700 text-sm">
+                    The methodology is in beta and may be updated or corrected at any time without prior notice.
+                  </p>
+                </div>
+                
+                <div>
+                  <h4 class="font-semibold text-gray-800 mb-2">
+                    <i class="fas fa-external-link-alt mr-2"></i>Third-party content
+                  </h4>
+                  <p class="text-gray-700 text-sm">
+                    References to third-party resources do not constitute endorsement. Their availability and accuracy are outside our control.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Contact -->
+          <section id="contact">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">
+              <i class="fas fa-envelope mr-3 text-blue-600"></i>Contact
+            </h2>
+
+            <div class="bg-blue-50 rounded-lg p-4">
+              <p class="text-gray-700">
+                If you notice any inaccuracies or have suggestions for improvement, please contact us at 
+                <a href="mailto:mepscore@gmail.com" class="text-blue-600 hover:text-blue-800 transition-colors">mepscore@gmail.com</a>
+              </p>
+            </div>
+
+          </section>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-gray-800 text-white mt-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div class="grid md:grid-cols-3 gap-8">
+        <div>
+          <h3 class="text-lg font-semibold mb-4">MEP Score</h3>
+          <p class="text-gray-300">
+            Transparent overview of activity of members of the European Parliament. Empowering citizens with objective information for democratic accountability.
+          </p>
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold mb-4">Useful Links</h3>
+          <ul class="space-y-2">
+            <li><a href="index.html" class="text-gray-300 hover:text-white transition-colors">MEP Score</a></li>
+            <li><a href="about.html" class="text-gray-300 hover:text-white transition-colors">About</a></li>
+            <li><a href="methodology.html" class="text-gray-300 hover:text-white transition-colors">Methodology</a></li>
+            <li><a href="https://parltrack.org" class="text-gray-300 hover:text-white transition-colors" target="_blank" rel="noopener">Parltrack</a></li>
+            <li><a href="https://europarl.europa.eu" class="text-gray-300 hover:text-white transition-colors" target="_blank" rel="noopener">European Parliament</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold mb-4">Contact</h3>
+          <p class="text-gray-300 text-sm">
+            If you notice any inaccuracies or have suggestions for improvement, please contact us at <a href="mailto:mepscore@gmail.com" class="text-blue-300 hover:text-blue-100 transition-colors">mepscore@gmail.com</a>
+          </p>
+        </div>
+      </div>
+      <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
+        <p class="mb-2">&copy; 2025 MEP Score. All rights reserved.</p>
+        <p class="text-xs">Informational only, no warranties; no liability for use or interpretation of the data; methodology may change.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Smooth scrolling for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        }
+      });
+    });
+  </script>
+</body>
+</html>

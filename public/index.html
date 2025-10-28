@@ -1,0 +1,3025 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MEP Score | European Parliament Member Activity Ranking</title>
+  <meta name="description" content="Overview of Members of the European parliament activities, using data published by the European parliament. Scoring system create user friendly interface for better orientation in importance of activities.">
+  <meta name="keywords" content="MEP score, European Parliament, MEP evaluation, parliamentary activity, legislative productivity, transparency, EU democracy">
+  <meta name="author" content="MEPs Activity Explorer">
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://mepranking.eu/">
+  <meta property="og:title" content="MEP Score | European Parliament Member Activity Ranking">
+  <meta property="og:description" content="Overview of Members of the European parliament activities, using data published by the European parliament. Scoring system create user friendly interface for better orientation in importance of activities.">
+  <meta property="og:image" content="https://mepranking.eu/og-image.jpg">
+  
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:url" content="https://mepranking.eu/">
+  <meta property="twitter:title" content="MEP Score | European Parliament Member Activity Ranking">
+  <meta property="twitter:description" content="Overview of Members of the European parliament activities, using data published by the European parliament. Scoring system create user friendly interface for better orientation in importance of activities.">
+  <meta property="twitter:image" content="https://mepranking.eu/og-image.jpg">
+  
+  <!-- Canonical URL -->
+  <link rel="canonical" href="https://mepranking.eu/">
+  
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "MEPs Activity Explorer",
+    "description": "Activity-based scoring of European Parliament member activity",
+    "url": "https://mepranking.eu/",
+    "applicationCategory": "GovernmentApplication",
+    "operatingSystem": "Web Browser",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "EUR"
+    },
+    "creator": {
+      "@type": "Organization",
+      "name": "MEPs Activity Explorer"
+    }
+  }
+  </script>
+  <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <link rel="stylesheet" href="css/design-system.css">
+  <style>
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #f5f7fa;
+      font-size: 14px;
+      line-height: 1.5;
+      /* Prevent zoom on input focus on iOS */
+      -webkit-text-size-adjust: 100%;
+    }
+    
+    /* Responsive typography */
+    @media (min-width: 768px) {
+      body {
+        font-size: 16px;
+      }
+    }
+    
+    /* Simple country badges - Chrome optimized */
+    .country-badge {
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      font-weight: 600 !important;
+      font-size: 0.75rem !important;
+      line-height: 1 !important;
+      min-width: 0 !important; /* Chrome fix for flex shrinking */
+      box-sizing: border-box !important; /* Chrome consistency */
+      vertical-align: middle !important; /* Chrome baseline alignment */
+      font-family: inherit !important; /* Chrome font inheritance */
+      text-rendering: optimizeLegibility !important; /* Chrome text rendering */
+      -webkit-font-smoothing: antialiased !important; /* Chrome font smoothing */
+      transform: translateZ(0) !important; /* Chrome hardware acceleration */
+    }
+    
+    /* Chrome-specific font rendering fixes */
+    @supports (-webkit-appearance: none) {
+      .country-badge {
+        font-weight: 700 !important; /* Stronger weight for Chrome */
+        letter-spacing: 0.025em !important; /* Better spacing in Chrome */
+      }
+    }
+    
+    /* Device-specific optimizations */
+    html, body {
+      max-width: 100%;
+      overflow-x: hidden; /* Prevent page from widening; scrolling happens inside table wrapper */
+    }
+    
+    /* iPhone SE and similar small screens */
+    @media (max-width: 375px) {
+      .dashboard-container {
+        grid-gap: 0.75rem;
+      }
+      
+      .sidebar {
+        padding: 0.75rem;
+      }
+      
+      .card-body {
+        padding: 0.75rem;
+      }
+    }
+    
+    /* iPad specific optimizations */
+    @media (min-width: 768px) and (max-width: 1024px) {
+      .data-table {
+        font-size: 0.8rem;
+      }
+      
+      .activity-pill {
+        padding: 0.6rem 0.9rem;
+        font-size: 0.8rem;
+      }
+    }
+    
+    /* Large tablets and small desktops */
+    @media (min-width: 1024px) and (max-width: 1200px) {
+      .dashboard-container {
+        grid-template-columns: 260px 1fr;
+      }
+    }
+    
+    .mep-photo {
+      width: 32px; /* Smaller for compact design */
+      height: 32px;
+      border-radius: 50%;
+      border: 1px solid #ccc;
+      margin-right: 8px;
+      vertical-align: middle;
+      object-fit: cover;
+      flex-shrink: 0; /* Prevent photo from shrinking in flex container */
+    }
+    
+    .mep-link {
+      display: flex; /* Use flexbox for alignment */
+      align-items: center; /* Vertically center items in the link */
+      text-decoration: none;
+      color: inherit;
+      height: 100%; /* Make link take full cell height */
+    }
+    
+    .mep-link:hover {
+      text-decoration: underline;
+    }
+    
+    .country-flag {
+      font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", "EmojiOne Color", "Android Emoji", sans-serif;
+    }
+    
+    /* Mobile-first simplified layout */
+    .dashboard-container {
+      display: block;
+      padding: 0;
+    }
+    
+    /* Tablet and up: side-by-side layout */
+    @media (min-width: 1024px) {
+      .dashboard-container {
+        display: grid;
+        grid-template-columns: 280px minmax(0, 1fr);
+        grid-gap: 1.5rem;
+        min-height: calc(100vh - 4rem);
+        /* Prevent grid from expanding beyond viewport */
+        max-width: 100%;
+        overflow-x: hidden;
+      }
+    }
+    
+    @media (min-width: 1200px) {
+      .dashboard-container {
+        grid-template-columns: 320px minmax(0, 1fr);
+      }
+    }
+    
+    /* Mobile: hidden sidebar, shown as expandable sections */
+    .sidebar {
+      display: none;
+    }
+    
+    /* Mobile filter bar */
+    .mobile-filter-bar {
+      background: white;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border-radius: 0.5rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    .mobile-filter-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      background: none;
+      border: none;
+      padding: 0;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #374151;
+      cursor: pointer;
+    }
+    
+    .mobile-filter-content {
+      display: none;
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid #e5e7eb;
+    }
+    
+    .mobile-filter-content.active {
+      display: block;
+    }
+    
+    .mobile-quick-filters {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    
+    .mobile-quick-filter {
+      padding: 0.5rem 1rem;
+      background: #f3f4f6;
+      border: 1px solid #d1d5db;
+      border-radius: 9999px;
+      font-size: 0.875rem;
+      color: #374151;
+      text-decoration: none;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+    }
+    
+    .mobile-quick-filter:hover,
+    .mobile-quick-filter.active {
+      background: #3b82f6;
+      color: white;
+      border-color: #3b82f6;
+    }
+    
+    /* Show desktop sidebar on larger screens */
+    @media (min-width: 1024px) {
+      .sidebar {
+        display: block;
+        background: white;
+        border-radius: 0.75rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        padding: 1.5rem;
+        max-height: calc(100vh - 3rem);
+        position: sticky;
+        top: 1.5rem;
+        overflow-y: auto;
+      }
+      
+      .mobile-filter-bar {
+        display: none;
+      }
+    }
+    
+    .main-content {
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      overflow-x: hidden; /* Prevent horizontal page scroll */
+      box-sizing: border-box;
+    }
+    
+    .card {
+      background: white;
+      border-radius: 0.75rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      transition: all 0.2s ease;
+      /* Prevent card from growing with table content */
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
+    }
+    
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 1rem; /* More compact padding */
+      border-bottom: 1px solid #e5e7eb;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    
+    @media (min-width: 768px) {
+      .card-header {
+        padding: 0.75rem 1.25rem; /* Reduced from 1.25rem */
+        flex-wrap: nowrap;
+        gap: 0;
+      }
+    }
+    
+    .card-body {
+      padding: 0.75rem 1rem; /* More compact padding */
+    }
+    
+    @media (min-width: 768px) {
+      .card-body {
+        padding: 1rem 1.25rem; /* Reduced from 1.5rem */
+      }
+    }
+    
+    /* Legacy table-container styles - kept for compatibility */
+    .table-container {
+      /* Most styles moved to .table-wrapper */
+    }
+    
+    @media (min-width: 768px) {
+      .table-container {
+        margin-top: 1.25rem;
+      }
+    }
+    
+    .data-table {
+      border-collapse: collapse !important;
+      border-spacing: 0 !important;
+      width: max-content;
+      min-width: 100%;
+      table-layout: fixed;
+      font-size: 0.75rem;
+    }
+    
+    @media (min-width: 768px) {
+      .data-table {
+        font-size: 0.875rem;
+      }
+    }
+    
+    .data-table th,
+    .data-table td {
+      white-space: nowrap;
+      padding: 0.5rem 0.25rem;
+      height: 56px;
+      border-bottom: 1px solid #e5e7eb;
+      border-right: 1px solid #e5e7eb;
+      vertical-align: middle;
+    }
+    
+    @media (min-width: 768px) {
+      .data-table th,
+      .data-table td {
+        padding: 0.4rem 0.4rem;
+        height: 50px;
+      }
+    }
+    
+    /* Make sure columns have appropriate widths */
+    .data-table th:first-child,
+    .data-table td:first-child {
+      width: 30px; /* Preserved */
+      max-width: 30px; /* Preserved */
+      min-width: 30px; /* Preserved */
+    }
+    
+    /* Style for the Name column (second child) */
+    .data-table td:nth-child(2) {
+      min-width: 180px !important; 
+      max-width: 250px !important;
+      /* vertical-align should be handled by .data-table td */
+    }
+    
+    /* Reports & Opinions specific styling */
+    .reports-opinions-col {
+      width: 150px;
+      min-width: 150px !important;
+      max-width: 150px !important;
+    }
+    
+    td[data-activity="reports_opinions"] {
+      width: 150px;
+      min-width: 150px !important;
+      max-width: 150px !important;
+      text-align: center;
+      background-color: white !important;
+      padding: 0.4rem !important;
+    }
+    
+    /* Breakdown values styling */
+    .breakdown-values {
+      white-space: nowrap;
+      font-family: monospace;
+      letter-spacing: 0.5px;
+    }
+    
+    /* Make sure there's no extra whitespace */
+    .tooltip-content p {
+      margin: 0.25rem 0;
+    }
+    
+    /* Breakdown table styling */
+    .breakdown-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    .breakdown-table tr.border-t {
+      border-top: 1px solid #e5e7eb;
+    }
+    
+    table {
+      border-collapse: separate;
+      border-spacing: 0;
+      width: max-content;
+      min-width: 100%;
+      font-size: 14px;
+    }
+    
+    th, td {
+      padding: 8px 12px;
+      border-bottom: 1px solid #e0e0e0;
+      border-right: 1px solid #e0e0e0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 200px;
+      min-width: 100px;
+      background: white;
+    }
+    
+    th {
+      position: sticky;
+      top: 0;
+      background: #f5f5f5;
+      z-index: 10;
+      font-weight: 600;
+    }
+    
+    th:first-child,
+    td:first-child {
+      position: sticky;
+      left: 0;
+      z-index: 20;
+      border-right: 2px solid #ccc;
+    }
+    
+    th:first-child {
+      z-index: 30;
+    }
+    
+    tr:hover td {
+      background-color: #f8f9fa;
+    }
+    
+    /* Ensure column headers are visible when scrolling horizontally */
+    thead tr th {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+    
+    /* Mobile card view instead of table */
+    .mobile-mep-cards {
+      display: block;
+    }
+    
+    /* Show table on mobile when cards fail to load */
+    .mobile-mep-cards:empty + .main-content .table-container {
+      display: block !important;
+    }
+    
+    .mobile-mep-card {
+      background: white;
+      border-radius: 0.75rem;
+      padding: 1rem;
+      margin-bottom: 0.75rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      border: 1px solid #e5e7eb;
+    }
+    
+    .mobile-mep-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+    
+    .mobile-mep-photo {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: 2px solid #e5e7eb;
+      margin-right: 0.75rem;
+      object-fit: cover;
+    }
+    
+    .mobile-mep-info {
+      flex: 1;
+      min-width: 0;
+    }
+    
+    .mobile-mep-name {
+      font-weight: 600;
+      color: #1f2937;
+      font-size: 1rem;
+      line-height: 1.25;
+      margin: 0 0 0.25rem 0;
+    }
+    
+    .mobile-mep-details {
+      font-size: 0.875rem;
+      color: #6b7280;
+      line-height: 1.25;
+    }
+    /* Mobile meta row: flag • group logo • national party */
+    .mobile-mep-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .flag-emoji { font-size: 1rem; line-height: 1; width: 1.25rem; display: inline-block; text-align: center; }
+    .group-logo-badge { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 22px; border-radius: 6px; font-weight: 700; font-size: 0.75rem; color: #fff; }
+    .group-logo-epp { background: #1f6feb; }
+    .group-logo-sd { background: #e11d48; }
+    .group-logo-renew { background: #0ea5e9; }
+    .group-logo-greens { background: #16a34a; }
+    .group-logo-ecr { background: #0ea5e9; }
+    .group-logo-id { background: #0f766e; }
+    .group-logo-left { background: #7c3aed; }
+    .group-logo-ni { background: #6b7280; }
+    .national-party { color: #374151; font-weight: 500; }
+    /* Touch-friendly tooltip */
+    .touch-tooltip .tooltip-content { min-width: max-content; }
+    .touch-tooltip[data-open="true"] .tooltip-content { visibility: visible; opacity: 1; }
+    
+    .mobile-mep-score {
+      text-align: right;
+      flex-shrink: 0;
+    }
+    
+    .mobile-score-label {
+      font-size: 0.75rem;
+      color: #6b7280;
+      text-transform: uppercase;
+      font-weight: 500;
+      letter-spacing: 0.025em;
+      margin-bottom: 0.125rem;
+    }
+    
+    .mobile-score-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #1f2937;
+      line-height: 1;
+    }
+    
+    .mobile-score-rank {
+      font-size: 0.75rem;
+      color: #6b7280;
+      margin-top: 0.25rem;
+    }
+    
+    
+    .mobile-activity-summary {
+      font-size: 0.75rem;
+      color: #6B7280;
+      margin-top: 0.25rem;
+      line-height: 1.3;
+      max-height: 2.6rem;
+      overflow: hidden;
+    }
+    
+    /* MEP Avatar System for Photos */
+    .mep-avatar-container {
+      position: relative;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    
+    .mep-avatar-container img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    
+    .mep-avatar-fallback {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 600;
+      font-size: 18px;
+      text-transform: uppercase;
+    }
+    
+    /* Hide mobile cards on desktop, show table */
+    @media (min-width: 1024px) {
+      .mobile-mep-cards {
+        display: none;
+      }
+    }
+    
+    /* Hide table on mobile, show only cards */
+    @media (max-width: 1023px) {
+      .table-container,
+      .table-wrapper {
+        display: none !important;
+      }
+    }
+    
+    /* Show table on desktop */
+    @media (min-width: 1024px) {
+      .table-container {
+        display: block;
+        font-size: 0.75rem;
+      }
+    }
+    
+    @media (min-width: 1024px) {
+      .table-container {
+        display: block;
+        overflow-x: auto;
+        overflow-y: visible;
+        position: relative;
+        margin-top: 1.25rem;
+        border: 1px solid #e0e0e0;
+        border-spacing: 0;
+        border-radius: 0.5rem;
+        -webkit-overflow-scrolling: touch;
+      }
+    }
+    
+    /* Add subtle shadow to indicate scrollable content */
+    .table-container::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 5px;
+      background: linear-gradient(to right, transparent, rgba(0,0,0,0.1));
+      pointer-events: none;
+    }
+    
+    .table-with-scroll-controls {
+      position: relative;
+    }
+    
+    /* Compact table styling */
+    .data-table {
+      width: max-content;
+      min-width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: 0.75rem;
+      /* Remove border since wrapper handles it */
+      border: none;
+      /* Table should not affect container size */
+      table-layout: auto;
+    }
+    
+    .data-table th,
+    .data-table td {
+      white-space: nowrap;
+      padding: 0.25rem 0.15rem;
+      min-width: 35px;
+      max-width: 80px;
+      border-bottom: 1px solid #e5e7eb;
+      border-right: 1px solid #e5e7eb;
+      font-size: 0.7rem;
+      height: 38px; /* More compact row height */
+    }
+    
+    /* Even more compact cells for activity counts */
+    .data-table td[data-activity] {
+      padding: 0.2rem 0.15rem;
+      text-align: center;
+      min-width: 45px; /* Much more compact for better fit */
+      max-width: 60px;
+      font-size: 0.65rem;
+    }
+
+    /* Ensure activity column headers align with body minimums */
+    .data-table th.activity-col {
+      min-width: 45px;
+      max-width: 60px;
+      font-size: 0.65rem;
+      padding: 0.2rem 0.1rem;
+    }
+    
+    /* Special case for rank column - make it sticky too */
+    .data-table th:first-child,
+    .data-table td:first-child {
+      padding: 0.25rem 0.1rem;
+      min-width: 20px;
+      max-width: 25px;
+      text-align: center;
+      font-size: 0.65rem;
+      position: sticky;
+      left: 0;
+      background-color: white;
+      z-index: 11;
+      box-shadow: 1px 0 2px rgba(0,0,0,0.05);
+    }
+    
+    /* Special case for name column */
+    .data-table th:nth-child(2),
+    .data-table td:nth-child(2) {
+      padding-left: 0.25rem;
+      padding-right: 0.25rem;
+      min-width: 160px;
+      max-width: 180px;
+    }
+    
+    /* Special case for country column - more compact */
+    .data-table th:nth-child(3),
+    .data-table td:nth-child(3) {
+      min-width: 26px;
+      max-width: 26px;
+      text-align: center;
+      padding: 0.2rem 0.1rem;
+      font-size: 0.65rem;
+    }
+    
+    /* Special case for group column - more compact */
+    .data-table th:nth-child(4),
+    .data-table td:nth-child(4) {
+      min-width: 40px;
+      max-width: 50px;
+      padding: 0.2rem 0.15rem;
+      font-size: 0.65rem;
+    }
+    
+    /* Special case for national party column (5th) - more compact */
+    .data-table th:nth-child(5),
+    .data-table td:nth-child(5) {
+      min-width: 80px;
+      max-width: 100px;
+      padding: 0.2rem 0.15rem;
+      font-size: 0.65rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    /* Fixed columns on scroll */
+    /* Name column (2nd column) is sticky - positioned after rank column */
+    .data-table th:nth-child(2),
+    .data-table td:nth-child(2) {
+      position: sticky;
+      background-color: white;
+      z-index: 10;
+      box-shadow: 2px 0 4px rgba(0,0,0,0.05);
+      left: 25px; /* Position after the 25px rank column */
+    }
+    
+    /* Rank column header - needs higher z-index when sticky */
+    .data-table th:first-child {
+      z-index: 17; /* Higher than name column header */
+    }
+    
+    /* Name column header - positioned after rank column */
+    .data-table th:nth-child(2) {
+      z-index: 16; /* Lower than rank column but higher than others */
+    }
+    
+    /* Country column - no longer sticky */
+    .data-table th:nth-child(3),
+    .data-table td:nth-child(3) {
+      /* No sticky positioning */
+    }
+    
+    .data-table th {
+      font-weight: 600;
+      background-color: #f9fafb;
+      text-align: left;
+      position: sticky;
+      top: 0;
+      z-index: 15;
+      height: 42px; /* Match reduced row height */
+      font-size: 0.65rem;
+    }
+    
+    /* Score column styling - make it prominent and sticky on right */
+    .data-table th.score-col,
+    .data-table td[data-column-id="score"],
+    .data-table td:last-child {
+      position: sticky !important;
+      right: 0 !important;
+      background-color: #f0f9ff !important; /* Light blue background */
+      z-index: 25 !important; /* Highest z-index to stay on top */
+      box-shadow: -2px 0 4px rgba(0,0,0,0.1) !important;
+      min-width: 60px !important;
+      max-width: 70px !important;
+      text-align: center !important;
+      font-weight: 600 !important;
+      border-left: 2px solid #3b82f6 !important;
+    }
+    
+    .data-table th.score-col,
+    .data-table th:last-child {
+      background-color: #dbeafe !important; /* Darker blue for header */
+      z-index: 30 !important; /* Even higher for header */
+      position: sticky !important;
+      right: 0 !important;
+    }
+    
+    /* Special styling for fixed columns */
+    /* Apply hover background to sticky columns */
+    .data-table tr:hover td:nth-child(1) {
+      background-color: #f9fafb;
+    }
+    
+    .data-table tr:hover td:nth-child(2) {
+      background-color: #f9fafb;
+    }
+    
+    .data-table tr:hover td[data-column-id="score"],
+    .data-table tr:hover td:last-child {
+      background-color: #e0f2fe !important; /* Slightly darker blue on hover */
+    }
+    
+    /* Abbreviate long text in cells */
+    .data-table td.abbreviate {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 120px;
+    }
+    
+    /* Country abbreviation styles (New) */
+    .country-abbr {
+      position: relative;
+      cursor: help;
+      display: inline-block;
+    }
+
+    .country-cell {
+      position: relative;
+      overflow: visible !important; /* Allow tooltip to overflow */
+    }
+
+    .country-abbr::after {
+      content: attr(data-full-name);
+      position: absolute;
+      left: 100%; 
+      top: 50%;
+      transform: translateY(-50%);
+      padding: 4px 8px;
+      background-color: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 4px;
+      font-size: 12px;
+      white-space: nowrap;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.2s, visibility 0.2s;
+      z-index: 9999; /* Match group-abbr z-index */
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-left: 8px; /* Add some space between the code and tooltip */
+    }
+
+    .country-abbr:hover::after {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    /* Horizontal Scroll Indicator */
+    .horizontal-scroll-indicator {
+      background-color: #f8f9fa;
+      padding: 0.75rem 1rem 0.5rem 1rem;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    
+    /* Table Wrapper - Key for proper overflow control */
+    .table-wrapper {
+      overflow-x: auto;
+      overflow-y: visible;
+      position: relative;
+      border: 1px solid #e0e0e0;
+      border-radius: 0 0 8px 8px;
+      /* Fixed width constraints - prevents container growth */
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
+      /* Enable smooth scrolling */
+      -webkit-overflow-scrolling: touch;
+      scroll-behavior: smooth;
+      overscroll-behavior-x: contain;
+      /* Compact table design */
+      font-size: 0.65rem;
+    }
+
+    .scroll-track {
+      height: 8px;
+      background: #e5e7eb;
+      border-radius: 4px;
+      position: relative;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    
+    .scroll-track:hover {
+      background: #d1d5db;
+    }
+    
+    .scroll-thumb {
+      position: absolute;
+      height: 8px;
+      background: #3b82f6;
+      border-radius: 4px;
+      cursor: grab;
+      opacity: 0.9;
+      transition: opacity 0.2s, transform 0.1s, background-color 0.2s;
+      box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+      top: 0;
+    }
+    
+    .scroll-thumb:hover, .scroll-thumb:active {
+      opacity: 1;
+      background: #2563eb;
+      transform: scaleY(1.1);
+    }
+    
+    .scroll-thumb:active {
+      cursor: grabbing;
+    }
+    
+    .filter-section {
+      margin-bottom: 1.5rem;
+    }
+    
+    .filter-label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #4b5563;
+    }
+    
+    .filter-input {
+      width: 100%;
+      padding: 0.5rem 0.75rem;
+      border: 1px solid #e5e7eb;
+      border-radius: 0.5rem;
+      font-size: 0.875rem;
+      transition: all 0.15s ease;
+      height: 40px; /* Fixed consistent height */
+      -webkit-appearance: none;
+      appearance: none;
+      box-sizing: border-box;
+    }
+    
+    .filter-input:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+    }
+    
+    /* Improve touch targets for select dropdowns */
+    select.filter-input {
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+      background-position: right 0.5rem center;
+      background-repeat: no-repeat;
+      background-size: 1.5em 1.5em;
+      padding-right: 2.5rem;
+    }
+    
+    .filter-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.25rem 0.75rem;
+      background-color: #e1effe;
+      color: #1e40af;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      margin-right: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .filter-badge button {
+      margin-left: 0.25rem;
+      color: #4b5563;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 0.75rem;
+    }
+    
+    .activity-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.75rem 1rem;
+      border-radius: 9999px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-right: 0.5rem;
+      margin-bottom: 0.5rem;
+      transition: all 0.15s ease;
+      border: 1px solid #e5e7eb;
+      cursor: pointer;
+      min-height: 48px;
+      min-width: 48px;
+      justify-content: center;
+      text-align: center;
+    }
+    
+    @media (min-width: 768px) {
+      .activity-pill {
+        padding: 0.5rem 0.875rem;
+        font-size: 0.75rem;
+        margin-right: 0.375rem;
+        margin-bottom: 0.375rem;
+        min-height: auto;
+        min-width: auto;
+        justify-content: flex-start;
+      }
+    }
+    
+    .activity-pill.selected {
+      background-color: #2563eb;
+      color: white;
+      border-color: #2563eb;
+    }
+    
+    .activity-pill:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    
+    .activity-count {
+      display: inline-flex;
+      margin-left: 0.25rem;
+      padding: 0 0.375rem;
+      background-color: rgba(255,255,255,0.3);
+      border-radius: 9999px;
+      font-size: 0.7rem;
+    }
+    
+    /* Tooltip styling */
+    .tooltip {
+      position: relative;
+      display: inline-block;
+    }
+    
+    .tooltip .tooltip-content {
+      visibility: hidden;
+      background-color: white;
+      color: #1f2937;
+      text-align: left;
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.375rem;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+      position: fixed;
+      z-index: 99999;
+      top: auto;
+      left: 50%;
+      transform: translateX(-50%);
+      min-width: 220px;
+      opacity: 0;
+      transition: opacity 0.2s, visibility 0.2s;
+      border: 1px solid #e5e7eb;
+      margin-top: 5px;
+    }
+    
+    .tooltip:hover .tooltip-content {
+      visibility: visible;
+      opacity: 1;
+    }
+    
+    /* Compact tooltip for column headers */
+    .tooltip.touch-tooltip .tooltip-content {
+      min-width: auto;
+      max-width: 280px;
+      white-space: normal;
+      font-size: 0.7rem;
+      line-height: 1.2;
+      padding: 0.4rem 0.6rem;
+      left: 20%;
+      transform: translateX(-20%);
+    }
+    
+    /* Table cell styling */
+    .data-table th,
+    .data-table td {
+      white-space: nowrap;
+      padding: 0.4rem 0.4rem;
+      min-width: 45px;
+      max-width: 120px;
+      border-bottom: 1px solid #e5e7eb;
+      border-right: 1px solid #e5e7eb;
+    }
+    
+    /* Group info popup */
+    .group-info-popup {
+      transition: all 0.2s ease-out;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+    
+    .animate-fade-in {
+      animation: fadeIn 0.2s ease-out;
+    }
+    
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .info-button {
+      transition: all 0.15s ease-in-out;
+    }
+    
+    .info-button:hover {
+      transform: scale(1.1);
+      background-color: rgba(59, 130, 246, 0.1);
+    }
+
+    /* Group abbreviation styles */
+    .group-abbr {
+      position: relative;
+      cursor: help;
+      display: inline-block;
+    }
+
+    .group-cell {
+      position: relative;
+      overflow: visible !important; /* Allow tooltip to overflow */
+    }
+
+    .group-abbr::after {
+      content: attr(data-full-name);
+      position: absolute;
+      left: 100%;
+      top: 50%;
+      transform: translateY(-50%);
+      padding: 4px 8px;
+      background-color: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 4px;
+      font-size: 12px;
+      white-space: nowrap;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.2s, visibility 0.2s;
+      z-index: 9999;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-left: 8px;
+    }
+
+    .group-abbr:hover::after {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    /* Weight slider styling */
+    .weight-slider {
+      background: linear-gradient(to right, #e2e8f0 0%, #e2e8f0 100%);
+      height: 8px;
+      border-radius: 4px;
+    }
+    
+    .weight-slider::-webkit-slider-thumb {
+      appearance: none;
+      height: 32px;
+      width: 32px;
+      border-radius: 50%;
+      background: #3b82f6;
+      cursor: pointer;
+      border: 3px solid #ffffff;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .weight-slider::-moz-range-thumb {
+      height: 32px;
+      width: 32px;
+      border-radius: 50%;
+      background: #3b82f6;
+      cursor: pointer;
+      border: 3px solid #ffffff;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    @media (min-width: 768px) {
+      .weight-slider::-webkit-slider-thumb {
+        height: 24px;
+        width: 24px;
+        border: 2px solid #ffffff;
+      }
+      
+      .weight-slider::-moz-range-thumb {
+        height: 24px;
+        width: 24px;
+        border: 2px solid #ffffff;
+      }
+    }
+    
+    /* Score breakdown modal styles */
+    .score-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    
+    .score-modal.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .score-modal-content {
+      background: white;
+      border-radius: 12px;
+      padding: 1rem;
+      max-width: 900px;
+      width: 95%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      transform: scale(0.9);
+      transition: transform 0.3s ease;
+      margin: 1rem;
+      -webkit-overflow-scrolling: touch;
+    }
+    
+    @media (min-width: 768px) {
+      .score-modal-content {
+        padding: 2rem;
+        max-height: 80vh;
+        margin: auto;
+      }
+    }
+    
+    .score-modal.active .score-modal-content {
+      transform: scale(1);
+    }
+    
+    .score-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    
+    .score-modal-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #6b7280;
+      transition: color 0.2s ease;
+    }
+    
+    .score-modal-close:hover {
+      color: #374151;
+    }
+    
+    .score-breakdown-section {
+      margin-bottom: 1.5rem;
+    }
+    
+    .score-breakdown-section h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .score-breakdown-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      min-width: 100%;
+    }
+    
+    .score-breakdown-table th,
+    .score-breakdown-table td {
+      padding: 0.75rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid #f3f4f6;
+      white-space: nowrap;
+    }
+    
+    .score-breakdown-table th {
+      background-color: #f9fafb;
+      font-weight: 600;
+      color: #374151;
+      font-size: 0.85rem;
+    }
+    
+    .score-breakdown-table td:last-child,
+    .score-breakdown-table th:last-child {
+      text-align: right;
+    }
+    
+    .axis-total {
+      background-color: #f0f9ff;
+      font-weight: 600;
+      color: #0369a1;
+    }
+    
+    .final-score-row {
+      background-color: #ecfccb;
+      font-weight: 700;
+      color: #365314;
+      font-size: 1rem;
+    }
+    
+    .clickable-score {
+      cursor: pointer;
+      color: #2563eb;
+      font-weight: 600;
+      text-decoration: underline;
+      text-decoration-style: dotted;
+    }
+    
+    .clickable-score:hover {
+      color: #1d4ed8;
+      background-color: #eff6ff;
+      padding: 2px 4px;
+      border-radius: 3px;
+    }
+    
+    /* Category modal styles */
+    .category-section {
+      border-bottom: 1px solid #e5e7eb;
+      padding-bottom: 1.5rem;
+    }
+    
+    .category-section:last-of-type {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+    
+    .indicator-item {
+      display: flex;
+      flex-direction: column;
+      padding: 0.75rem;
+      background-color: #f9fafb;
+      border-radius: 0.5rem;
+      border: 1px solid #e5e7eb;
+    }
+    
+    .indicator-item:hover {
+      background-color: #f3f4f6;
+      border-color: #d1d5db;
+    }
+    
+    .methodology-category {
+      padding: 0.75rem;
+      background-color: #f9fafb;
+      border-radius: 0.5rem;
+      border: 1px solid #e5e7eb;
+    }
+    
+    .methodology-category:hover {
+      background-color: #f3f4f6;
+      border-color: #d1d5db;
+    }
+    
+    /* Group logo styles */
+    .group-display {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .group-logo {
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+    
+    .group-text {
+      font-weight: 500;
+    }
+    
+    /* Fallback for when logos fail to load */
+    .group-logo[style*="display: none"] + .group-text {
+      display: inline !important;
+    }
+    
+    /* Responsive group logo sizing */
+    @media (max-width: 480px) {
+      /* Mobile phones */
+      .group-display {
+        gap: 0.25rem;
+      }
+      .group-logo.h-6 {
+        height: 1rem !important; /* 4 */
+        width: auto;
+      }
+      .group-logo.h-4 {
+        height: 0.875rem !important; /* 3.5 */
+        width: auto;
+      }
+      .group-logo.h-8 {
+        height: 1.25rem !important; /* 5 */
+        width: auto;
+      }
+      .group-text {
+        font-size: 0.875rem;
+      }
+    }
+    
+    @media (min-width: 481px) and (max-width: 768px) {
+      /* Tablets */
+      .group-display {
+        gap: 0.375rem;
+      }
+      .group-logo.h-6 {
+        height: 1.125rem !important; /* 4.5 */
+        width: auto;
+      }
+      .group-logo.h-4 {
+        height: 0.9375rem !important; /* 3.75 */
+        width: auto;
+      }
+      .group-logo.h-8 {
+        height: 1.5rem !important; /* 6 */
+        width: auto;
+      }
+    }
+    
+    @media (min-width: 769px) and (max-width: 1024px) {
+      /* iPad landscape and small laptops */
+      .group-display {
+        gap: 0.5rem;
+      }
+    }
+    
+    /* Ensure table cells with group logos maintain proper alignment */
+    .group-cell .group-display {
+      justify-content: center;
+    }
+    
+    @media (max-width: 768px) {
+      .group-cell .group-display {
+        justify-content: flex-start;
+      }
+    }
+    
+    /* Country flag styles */
+    .country-display {
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 0.5rem !important;
+      vertical-align: middle !important; /* Chrome baseline alignment */
+      flex-shrink: 0 !important; /* Prevent Chrome flex shrinking */
+    }
+    
+    .country-flag {
+      line-height: 1;
+      display: inline-block;
+      text-align: center;
+      /* Ensure emoji flags render across browsers (Windows/Chrome included) */
+      font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", "EmojiOne Color", "Android Emoji", sans-serif !important;
+    }
+    
+    /* Responsive country flag sizing */
+    @media (max-width: 480px) {
+      .country-display {
+        gap: 0.25rem;
+      }
+      .country-flag.text-base {
+        font-size: 0.875rem !important;
+      }
+      .country-flag.text-lg {
+        font-size: 1rem !important;
+      }
+    }
+    
+    @media (min-width: 481px) and (max-width: 768px) {
+      .country-display {
+        gap: 0.375rem;
+      }
+    }
+    
+    /* Mobile card specific group logo styling */
+    .mobile-mep-card .group-display {
+      display: inline-flex !important;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    
+    .mobile-mep-card .group-logo {
+      height: 16px !important;
+      width: auto;
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+    
+    .mobile-mep-card .group-text {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: #6b7280;
+    }
+    
+    /* Mobile card country flag styling */
+    .mobile-mep-card .country-display {
+      display: inline-flex !important;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    
+    .mobile-mep-card .country-flag {
+      font-size: 0.875rem;
+    }
+    
+    /* Ensure mobile cards show flags and logos inline with other meta info */
+    .mobile-mep-details {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    
+    .mobile-mep-details .tooltip.touch-tooltip {
+      display: inline-flex;
+      align-items: center;
+    }
+    
+    /* Enhanced SVG Logo Styling */
+    .logo-svg {
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+      transition: all 0.3s ease;
+    }
+    
+    .logo-svg:hover {
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15));
+      transform: translateY(-1px);
+    }
+    
+    /* Ensure crisp SVG rendering */
+    img[src$=".svg"] {
+      shape-rendering: geometricPrecision;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: crisp-edges;
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="bg-white shadow-sm sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <a href="index.html" class="flex items-center">
+              <img src="./logos/mep_score.svg" alt="MEP Score Logo" class="logo-svg h-12 w-auto sm:h-16 lg:h-20 max-w-none">
+            </a>
+          </div>
+        </div>
+        <div class="flex items-center space-x-4">
+          <a href="index.html" class="nav-link text-blue-600 font-semibold">Home</a>
+          <a href="about.html" class="nav-link">About</a>
+          <a href="methodology.html" class="nav-link">Methodology</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Page Header -->
+  <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border-b">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      <div class="text-center">
+        <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">MEP Score</h1>
+        <p class="text-lg sm:text-xl lg:text-2xl text-gray-600 max-w-4xl mx-auto mb-6 sm:mb-8 px-2 leading-relaxed">
+          Overview of Members of the European parliament activities: 
+          Legislative Production, Control & Transparency, Engagement & Presence, and Institutional Roles.
+        </p>
+        <div class="flex flex-wrap justify-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-500 px-4">
+          <span class="flex items-center"><i class="fas fa-users mr-1"></i>MEPs 2454 (for 3 terms) since 2014</span>
+          <span class="flex items-center"><i class="fas fa-chart-line mr-1"></i>4-category methodology</span>
+          <span class="flex items-center"><i class="fas fa-database mr-1"></i>Data from Parltrack</span>
+          <span class="flex items-center"><i class="fas fa-sync mr-1"></i>Last update July 23rd 2025</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div class="dashboard-container">
+      <!-- Mobile Filter Bar -->
+      <div class="mobile-filter-bar">
+        <button class="btn btn-secondary mobile-filter-toggle" id="mobile-filter-toggle" aria-expanded="false" aria-controls="mobile-filter-content">
+          <span>📊 Sort & Settings</span>
+          <i class="fas fa-chevron-down transition-transform" id="mobile-filter-icon"></i>
+        </button>
+        
+        <div class="mobile-filter-content" id="mobile-filter-content">
+          <!-- Sort By Options -->
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Sort MEPs by</label>
+            <select id="mobile-sort-select" class="filter-input">
+              <option value="final_score">Score (highest first)</option>
+              <option value="speeches">Speeches (highest first)</option>
+              <option value="amendments">Amendments (highest first)</option>
+              <option value="reports_opinions">Reports & Opinions</option>
+              <option value="questions_written">Written Questions</option>
+              <option value="questions_oral">Oral Questions</option>
+              <option value="motions">Motions</option>
+              <option value="explanations">Explanations</option>
+              <option value="full_name">Name (A-Z)</option>
+              <option value="country">Country (A-Z)</option>
+            </select>
+          </div>
+          
+          <!-- Simplified Filter Controls -->
+          <div class="space-y-3">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Parliamentary Term</label>
+              <select id="mobile-term-select" class="filter-input">
+                <option value="8">8th term (2014-2019)</option>
+                <option value="9">9th term (2019-2024)</option>
+                <option value="10" selected>10th term (2024-2029)</option>
+              </select>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Search MEP</label>
+              <input type="text" id="mobile-general-search" placeholder="Name, country, or party..." class="filter-input">
+            </div>
+          </div>
+          
+          <!-- Advanced Settings Toggle -->
+          <div class="mt-4 pt-3 border-t border-gray-200">
+            <button class="btn btn-outline btn-sm mobile-filter-toggle" id="mobile-advanced-toggle" aria-expanded="false" aria-controls="mobile-advanced-content">
+              <span>⚙️ Advanced Settings</span>
+              <i class="fas fa-chevron-down transition-transform text-xs" id="mobile-advanced-icon"></i>
+            </button>
+            <div class="mobile-filter-content mt-2" id="mobile-advanced-content">
+              <p class="text-xs text-gray-500 mb-2">Custom weighting and detailed filters available on desktop</p>
+              <button class="btn btn-secondary w-full">
+                Switch to Desktop View
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Desktop Sidebar (Hidden on Mobile) -->
+      <aside class="sidebar">
+        <h2 class="text-lg font-semibold text-gray-900 mb-5">Filters</h2>
+        
+        <!-- Term Filter -->
+        <div class="filter-section">
+          <label class="filter-label">
+            Parliamentary Term
+          </label>
+          <select id="term-select" class="filter-input">
+            <option value="8">8th term (2014-2019)</option>
+            <option value="9">9th term (2019-2024)</option>
+            <option value="10" selected>10th term (2024-2029)</option>
+          </select>
+        </div>
+        
+        <!-- Search Filter -->
+        <div class="filter-section">
+          <label for="general-search" class="filter-label">
+            Search MEPs
+          </label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
+              <i class="fas fa-search text-xs"></i>
+            </span>
+            <input type="text" id="general-search" 
+                   class="filter-input pl-8"
+                   placeholder="Name, country, group...">
+          </div>
+        </div>
+        
+        <!-- Country Filter -->
+        <div class="filter-section">
+          <label class="filter-label">
+            Country
+          </label>
+          <select id="country-filter" class="filter-input">
+            <option value="">All Countries</option>
+          </select>
+        </div>
+        
+        <!-- Group Filter -->
+        <div class="filter-section">
+          <label class="filter-label">
+            Political Group
+          </label>
+          <select id="group-filter" class="filter-input">
+            <option value="">All Groups</option>
+          </select>
+        </div>
+        
+        <!-- Party Filter -->
+        <div class="filter-section">
+          <label class="filter-label">
+            National Party
+          </label>
+          <select id="party-filter" class="filter-input">
+            <option value="">All Parties</option>
+          </select>
+        </div>
+        
+        <!-- Scoring System Section -->
+        <div class="filter-section">
+          <label class="filter-label mb-3">
+            <i class="fas fa-calculator mr-2"></i>Scoring System
+          </label>
+          
+          <!-- Default Methodology Overview -->
+          <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+            <h4 class="font-semibold text-blue-800 mb-2 text-sm">4-Category Methodology</h4>
+            <div class="space-y-2 text-xs text-blue-700">
+              <div class="flex items-center">
+                <i class="fas fa-gavel w-4 mr-2 text-green-600"></i>
+                <span><strong>Legislative Production:</strong> Reports & Amendments</span>
+              </div>
+              <div class="flex items-center">
+                <i class="fas fa-search w-4 mr-2 text-blue-600"></i>
+                <span><strong>Control & Transparency:</strong> Questions & Explanations</span>
+              </div>
+              <div class="flex items-center">
+                <i class="fas fa-users w-4 mr-2 text-purple-600"></i>
+                <span><strong>Engagement & Presence:</strong> Speeches & Motions</span>
+              </div>
+              <div class="flex items-center">
+                <i class="fas fa-crown w-4 mr-2 text-orange-600"></i>
+                <span><strong>Institutional Roles:</strong> Power × Scarcity bonuses</span>
+              </div>
+            </div>
+            <div class="mt-2 pt-2 border-t border-blue-200 text-center">
+              <a href="methodology.html" class="btn btn-outline btn-sm">
+                <i class="fas fa-book mr-1"></i>
+                View Full Methodology
+              </a>
+            </div>
+          </div>
+          
+          <!-- Custom Weights Section -->
+          <div class="mb-4">
+            <h4 class="text-sm font-medium text-gray-700 mb-3 flex items-center">
+              <i class="fas fa-sliders-h mr-2"></i>Custom Weights
+              <div class="tooltip ml-2">
+                <i class="fas fa-info-circle text-gray-400"></i>
+                <div class="tooltip-content">
+                  Adjust category importance:<br>
+                  • <strong>+100%</strong>: Double importance<br>
+                  • <strong>0%</strong>: Default weight (neutral)<br>
+                  • <strong>-100%</strong>: Reverse scoring<br><br>
+                  Changes apply immediately to rankings.
+                </div>
+              </div>
+            </h4>
+            
+            <div class="space-y-3">
+              <div class="weight-control">
+                <label class="flex items-center justify-between text-sm">
+                  <span class="text-green-700 font-medium">Legislative Production</span>
+                  <span class="weight-value font-mono text-blue-600" id="legislative-production-value">0%</span>
+                </label>
+                <input 
+                  type="range" 
+                  min="-100" 
+                  max="100" 
+                  step="5" 
+                  value="0"
+                  id="weight-legislative-production"
+                  class="weight-slider w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-1"
+                >
+              </div>
+              
+              <div class="weight-control">
+                <label class="flex items-center justify-between text-sm">
+                  <span class="text-blue-700 font-medium">Control & Transparency</span>
+                  <span class="weight-value font-mono text-blue-600" id="control-transparency-value">0%</span>
+                </label>
+                <input 
+                  type="range" 
+                  min="-100" 
+                  max="100" 
+                  step="5" 
+                  value="0"
+                  id="weight-control-transparency"
+                  class="weight-slider w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-1"
+                >
+              </div>
+              
+              <div class="weight-control">
+                <label class="flex items-center justify-between text-sm">
+                  <span class="text-purple-700 font-medium">Engagement & Presence</span>
+                  <span class="weight-value font-mono text-blue-600" id="engagement-presence-value">0%</span>
+                </label>
+                <input 
+                  type="range" 
+                  min="-100" 
+                  max="100" 
+                  step="5" 
+                  value="0"
+                  id="weight-engagement-presence"
+                  class="weight-slider w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-1"
+                >
+              </div>
+              
+              <div class="weight-control">
+                <label class="flex items-center justify-between text-sm">
+                  <span class="text-orange-700 font-medium">Institutional Roles</span>
+                  <span class="weight-value font-mono text-blue-600" id="institutional-roles-value">0%</span>
+                </label>
+                <input 
+                  type="range" 
+                  min="-100" 
+                  max="100" 
+                  step="5" 
+                  value="0"
+                  id="weight-institutional-roles"
+                  class="weight-slider w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-1"
+                >
+              </div>
+              
+              <!-- Attendance Penalty Toggle -->
+              <div class="weight-control border-t border-gray-200 pt-3">
+                <label class="flex items-center justify-between text-sm mb-2">
+                  <div class="flex items-center">
+                    <span class="text-red-700 font-medium">Attendance Penalty</span>
+                    <div class="tooltip ml-2">
+                      <i class="fas fa-info-circle text-gray-400"></i>
+                      <div class="tooltip-content">
+                        When enabled, MEPs with low voting attendance<br>
+                        receive score penalties. When disabled, attendance<br>
+                        has no impact on final scores.
+                      </div>
+                    </div>
+                  </div>
+                  <span class="font-mono text-blue-600" id="attendance-penalty-status">ON</span>
+                </label>
+                <button id="attendance-penalty-toggle" class="btn btn-outline w-full" style="--color-primary-600: #dc2626; --color-primary-50: #fef2f2; --color-primary-100: #fee2e2;">
+                  <i class="fas fa-toggle-on mr-2"></i>Attendance Penalty Enabled
+                </button>
+              </div>
+              
+              <div class="mt-3 pt-3 border-t border-gray-200">
+                <div class="flex gap-2 mb-2">
+                  <button id="apply-weights" class="btn btn-primary flex-1" aria-label="Apply custom scoring weights to MEP rankings">
+                    <i class="fas fa-check mr-1"></i>Apply Weights
+                  </button>
+                  <button id="reset-weights" class="btn btn-secondary flex-1" aria-label="Reset all weights to default values">
+                    <i class="fas fa-undo mr-1"></i>Reset to Default
+                  </button>
+                </div>
+                <p class="text-xs text-gray-500">
+                  <i class="fas fa-info-circle mr-1"></i>
+                  0% = default weight, positive = more important, negative = less important
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Reset Filters Button -->
+        <button id="reset-filters" class="w-full mt-4 py-3 px-4 bg-gray-100 text-gray-700 font-medium rounded-md hover:bg-gray-200 transition-colors min-h-[48px] flex items-center justify-center">
+          Reset Filters
+        </button>
+      </aside>
+      
+      <!-- Main Content -->
+      <div class="main-content">
+        <!-- Mobile Results Summary -->
+        <div class="block lg:hidden mb-4">
+          <div class="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+            <div class="flex items-center justify-between">
+              <div>
+                <h2 class="text-lg font-semibold text-gray-900">MEP Score</h2>
+                <p class="text-sm text-gray-600" id="mobile-results-count">Loading...</p>
+                <div class="text-xs px-2 py-1 rounded mt-1 inline-flex items-center gap-1 bg-blue-50 text-blue-700 border border-blue-200" id="mobile-sort-indicator" style="display: none;">
+                  <i class="fas fa-sort-amount-down-alt"></i>
+                  <span id="mobile-sort-indicator-text">Sorted by speeches</span>
+                </div>
+                <div class="text-xs text-gray-500 mt-1" id="mobile-sort-direction" style="display: none;">
+                  Highest first
+                </div>
+              </div>
+              <div class="text-right">
+                <div class="text-sm text-gray-500">Current Term</div>
+                <div class="text-2xl font-bold text-blue-600" id="mobile-current-term">10</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Mobile MEP Cards (shown on mobile) -->
+        <div class="mobile-mep-cards" id="mobile-mep-cards">
+          <!-- Loading state for mobile -->
+          <div class="text-center p-8 text-gray-500" id="mobile-loading-state">
+            <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+            <p>Loading MEP data...</p>
+          </div>
+        </div>
+        
+        <!-- Desktop Activity Selection Card (hidden on mobile) -->
+        <div class="card mb-3 hidden lg:block">
+          <div class="card-header">
+            <h2 class="text-base font-semibold text-gray-900">Activity Columns</h2>
+          </div>
+          <div class="card-body">
+            <div class="flex justify-between items-center mb-4">
+              <p class="text-sm text-gray-600">Choose which activities to display in the table:</p>
+              <div class="flex gap-2">
+                <button id="select-all-activities" class="btn btn-outline btn-sm"
+                        style="--color-primary-600:#059669;--color-primary-50:#ecfdf5;--color-primary-100:#d1fae5;">
+                  <i class="fas fa-check-double mr-1"></i>Select All
+                </button>
+                <button id="clear-all-activities" class="btn btn-outline btn-sm"
+                        style="--color-primary-600:#dc2626;--color-primary-50:#fef2f2;--color-primary-100:#fee2e2;">
+                  <i class="fas fa-times mr-1"></i>Clear All
+                </button>
+              </div>
+            </div>
+            <div class="space-y-4">
+              <!-- 1. Legislative Production -->
+              <div>
+                <h3 class="text-sm font-medium text-green-700 mb-2 flex items-center">
+                  <i class="fas fa-gavel mr-2"></i>1. Legislative Production
+                </h3>
+                <div class="flex flex-wrap gap-2" id="legislative-production">
+                  <div class="activity-pill selected" data-activity="reports_opinions" data-category="legislative_production">
+                    Reports & Opinions <span class="activity-count">0</span>
+                  </div>
+                  <div class="activity-pill selected" data-activity="amendments" data-category="legislative_production">
+                    Amendments <span class="activity-count">0</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 2. Control & Transparency -->
+              <div>
+                <h3 class="text-sm font-medium text-blue-700 mb-2 flex items-center">
+                  <i class="fas fa-search mr-2"></i>2. Control & Transparency
+                </h3>
+                <div class="flex flex-wrap gap-2" id="control-transparency">
+                  <div class="activity-pill" data-activity="questions_written" data-category="control_transparency">
+                    Written Questions <span class="activity-count">0</span>
+                  </div>
+                  <div class="activity-pill" data-activity="questions_oral" data-category="control_transparency">
+                    Oral Questions <span class="activity-count">0</span>
+                  </div>
+                  <div class="activity-pill" data-activity="explanations" data-category="control_transparency">
+                    Explanations <span class="activity-count">0</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 3. Engagement & Presence -->
+              <div>
+                <h3 class="text-sm font-medium text-purple-700 mb-2 flex items-center">
+                  <i class="fas fa-users mr-2"></i>3. Engagement & Presence
+                </h3>
+                <div class="flex flex-wrap gap-2" id="engagement-presence">
+                  <div class="activity-pill selected" data-activity="speeches" data-category="engagement_presence">
+                    Speeches <span class="activity-count">0</span>
+                  </div>
+                  <div class="activity-pill" data-activity="motions" data-category="engagement_presence">
+                    Motions <span class="activity-count">0</span>
+                  </div>
+                  <div class="activity-pill selected" data-activity="votes_attended" data-category="engagement_presence">
+                    Votes Attended <span class="activity-count">0</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 4. Institutional Roles -->
+              <div>
+                <h3 class="text-sm font-medium text-orange-700 mb-2 flex items-center">
+                  <i class="fas fa-crown mr-2"></i>4. Institutional Roles
+                </h3>
+                <div class="flex flex-wrap gap-2" id="institutional-roles">
+                  <div class="activity-pill" data-activity="ep_president" data-category="institutional_roles">
+                    EP President <span class="activity-count">0</span>
+                  </div>
+                  <div class="activity-pill" data-activity="ep_vice_president" data-category="institutional_roles">
+                    EP Vice President <span class="activity-count">0</span>
+                  </div>
+                  <div class="activity-pill" data-activity="committee_chair" data-category="institutional_roles">
+                    Committee Chair <span class="activity-count">0</span>
+                  </div>
+                  <div class="activity-pill" data-activity="ep_quaestor" data-category="institutional_roles">
+                    Quaestor <span class="activity-count">0</span>
+                  </div>
+                  <div class="activity-pill" data-activity="committee_vice_chair" data-category="institutional_roles">
+                    Committee Vice Chair <span class="activity-count">0</span>
+                  </div>
+                  <div class="activity-pill" data-activity="delegation_chair" data-category="institutional_roles">
+                    Delegation Chair <span class="activity-count">0</span>
+                  </div>
+                  <div class="activity-pill" data-activity="delegation_vice_chair" data-category="institutional_roles">
+                    Delegation Vice Chair <span class="activity-count">0</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Results Card -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="text-base font-semibold text-gray-900" id="results-count">EP Members</h2>
+            <div class="text-sm text-gray-500" id="active-filters">
+              <!-- Will be filled with active filter badges -->
+            </div>
+          </div>
+          
+          <!-- Custom Horizontal Scroll Indicator -->
+          <div class="horizontal-scroll-indicator" aria-label="Scroll the table horizontally using the slider or mouse/trackpad">
+            <div class="scroll-track">
+              <div class="scroll-thumb" id="table-scroll-thumb"></div>
+            </div>
+          </div>
+          
+          <!-- Table Wrapper with Proper Overflow -->
+          <div class="table-wrapper" role="region" aria-label="MEP activity table" tabindex="0">
+            <table class="data-table">
+              <thead id="explorer-table-head">
+                <tr>
+                  <th data-column-id="rank">#</th>
+                  <th data-column-id="full_name">Name</th>
+                  <th data-column-id="country">Country</th>
+                  <th data-column-id="group">Group</th>
+                  <th data-column-id="national_party">Nat. Party</th>
+                    
+                    <!-- Legislative Activities -->
+                    <th class="activity-col" data-activity="speeches" data-column-id="speeches" data-category="legislative">Speeches</th>
+                    <th class="activity-col reports-opinions-col" data-activity="reports_opinions" data-column-id="reports_opinions" data-category="legislative">
+                      <span class="inline-flex items-center gap-1">
+                        Reports & Opinions
+                        <span class="tooltip touch-tooltip" aria-label="What does 4+4+0+4 mean?">
+                          <i class="fas fa-info-circle text-gray-400"></i>
+                          <div class="tooltip-content text-xs">
+                            Reports (Rapporteur) + Reports (Shadow) + Opinions (Rapporteur) + Opinions (Shadow)
+                          </div>
+                        </span>
+                      </span>
+                    </th>
+                    <th class="activity-col" data-activity="amendments" data-column-id="amendments" data-category="legislative">Amend.</th>
+                    <th class="activity-col" data-activity="votes_attended" data-column-id="votes_attended" data-category="engagement">Vote Attended</th>
+                    <th class="activity-col" data-activity="questions_written" data-column-id="questions_written" data-category="control_transparency">Written Q.</th>
+                    <th class="activity-col" data-activity="motions" data-column-id="motions" data-category="legislative">Motions</th>
+                    <th class="activity-col" data-activity="explanations" data-column-id="explanations" data-category="legislative">Expl.</th>
+                    <th class="activity-col" data-activity="questions_oral" data-column-id="questions_oral" data-category="control_transparency">Oral Q.</th>
+                    
+                    <!-- Committee Roles -->
+                    <th class="activity-col" data-activity="committee_chair" data-column-id="committee_chair" data-category="committee">Comm. Chair</th>
+                    <th class="activity-col" data-activity="committee_vice_chair" data-column-id="committee_vice_chair" data-category="committee">Comm. VC</th>
+                    <th class="activity-col" data-activity="committee_member" data-column-id="committee_member" data-category="committee">Comm. Mem.</th>
+                    <th class="activity-col" data-activity="committee_substitute" data-column-id="committee_substitute" data-category="committee">Comm. Sub.</th>
+                    
+                    <!-- Delegation Roles -->
+                    <th class="activity-col" data-activity="delegation_chair" data-column-id="delegation_chair" data-category="delegation">Del. Chair</th>
+                    <th class="activity-col" data-activity="delegation_vice_chair" data-column-id="delegation_vice_chair" data-category="delegation">Del. VC</th>
+                    <th class="activity-col" data-activity="delegation_member" data-column-id="delegation_member" data-category="delegation">Del. Mem.</th>
+                    <th class="activity-col" data-activity="delegation_substitute" data-column-id="delegation_substitute" data-category="delegation">Del. Sub.</th>
+                    
+                    <!-- EP Leadership -->
+                    <th class="activity-col" data-activity="ep_president" data-column-id="ep_president" data-category="leadership">EP President</th>
+                    <th class="activity-col" data-activity="ep_vice_president" data-column-id="ep_vice_president" data-category="leadership">EP VP</th>
+                    <th class="activity-col" data-activity="ep_quaestor" data-column-id="ep_quaestor" data-category="leadership">EP Quaest.</th>
+                    
+                  <th data-column-id="score" class="score-col">Score</th>
+                </tr>
+              </thead>
+              <tbody id="explorer-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/score-breakdown.js"></script>
+  <script type="module" src="js/explorer.js"></script>
+  <script type="module" src="js/sync-manager.js"></script>
+  
+  <script>
+    // Handle tooltip positioning for table headers
+    document.addEventListener('DOMContentLoaded', function() {
+      // Utility: country ISO2 -> flag emoji
+      function countryToFlag(iso2) {
+        if (!iso2 || iso2.length < 2) return '';
+        const codePoints = iso2.toUpperCase().split('').map(c => 127397 + c.charCodeAt());
+        return String.fromCodePoint(...codePoints);
+      }
+
+      // Local: map country name -> ISO2 (kept in sync with explorer.js)
+      function getCountryCode(countryName) {
+        const countryCodes = {
+          'Austria': 'AT', 'Belgium': 'BE', 'Bulgaria': 'BG', 'Croatia': 'HR', 'Cyprus': 'CY',
+          'Czech Republic': 'CZ', 'Czechia': 'CZ', 'Denmark': 'DK', 'Estonia': 'EE', 'Finland': 'FI', 'France': 'FR',
+          'Germany': 'DE', 'Greece': 'GR', 'Hungary': 'HU', 'Ireland': 'IE', 'Italy': 'IT',
+          'Latvia': 'LV', 'Lithuania': 'LT', 'Luxembourg': 'LU', 'Malta': 'MT', 'Netherlands': 'NL',
+          'Poland': 'PL', 'Portugal': 'PT', 'Romania': 'RO', 'Slovakia': 'SK', 'Slovenia': 'SI',
+          'Spain': 'ES', 'Sweden': 'SE'
+        };
+        
+        // Normalize the country name to handle case sensitivity and whitespace
+        const normalizedName = countryName?.trim();
+        const countryCode = countryCodes[normalizedName];
+        
+        // If we can't find the country code, return a fallback instead of the full name
+        if (countryCode) {
+          return countryCode;
+        }
+        
+        // For unknown countries, return the first 2 letters uppercase
+        console.warn('Unknown country name:', normalizedName);
+        return normalizedName?.substring(0, 2).toUpperCase() || 'XX';
+      }
+
+      // Local: group full name -> abbreviation
+      function abbreviatePolicyGroupLocal(groupName) {
+        const map = {
+          "Group of the European People's Party (Christian Democrats)": 'EPP',
+          'Group of the Progressive Alliance of Socialists and Democrats in the European Parliament': 'S&D',
+          'Progressive Alliance of Socialists and Democrats': 'S&D',
+          'Renew Europe Group': 'Renew',
+          'Group of the Greens/European Free Alliance': 'Greens/EFA',
+          'European Conservatives and Reformists Group': 'ECR',
+          'The Left group in the European Parliament - GUE/NGL': 'Left',
+          'Identity and Democracy Group': 'ID',
+          'Non-attached Members': 'NI',
+          'Group of the Alliance of Liberals and Democrats for Europe': 'ALDE',
+          'Europe of Freedom and Direct Democracy Group': 'EFDD',
+          'Europe of Nations and Freedom Group': 'ENF',
+          'Patriots for Europe': 'PfE',
+          'Europe of Sovereign Nations': 'ESN',
+          'Confederal Group of the European United Left/Nordic Green Left': 'GUE/NGL',
+          'Group of the European United Left - Nordic Green Left': 'GUE/NGL',
+          'European United Left–Nordic Green Left': 'GUE/NGL'
+        };
+        if (map[groupName]) return map[groupName];
+        for (const [full, abbr] of Object.entries(map)) {
+          if (groupName && (groupName.includes(full) || full.includes(groupName))) return abbr;
+        }
+        return groupName || 'NI';
+      }
+
+      // Utility: political group full name -> badge HTML with tooltip
+      function renderGroupLogoBadge(groupName) {
+        const name = groupName || 'Non-attached Members';
+        
+        // Group name to logo file mapping (same as utilities.js)
+        const GROUP_LOGO_MAPPING = {
+          'EPP': 'EPP.png',
+          'S&D': 'snd.png',
+          'ECR': 'ecr-group.png',
+          'European Conservatives and Reformists Group': 'ecr-group.png',
+          'Renew': 'renew.png',
+          'RE': 'renew.png',
+          'Greens/EFA': 'greens.png',
+          'GUE/NGL': 'theleft.png',
+          'Left': 'theleft.png',
+          'The Left group in the European Parliament - GUE/NGL': 'theleft.png',
+          'ID': 'NI.png',
+          'PfE': 'patriots.png',
+          'Patriots for Europe Group': 'patriots.png',
+          'ESN': 'ESN.png',
+          'Europe of Sovereign Nations': 'ESN.png',
+          'Europe of Sovereign Nations Group': 'ESN.png',
+          'NI': 'NI.png',
+          'Non-attached Members': 'NI.png'
+        };
+        
+        // Group abbreviation mapping
+        const GROUP_ABBREVIATION_MAPPING = {
+          "Group of the European People's Party (Christian Democrats)": "EPP",
+          "Group of the Progressive Alliance of Socialists and Democrats in the European Parliament": "S&D",
+          'Renew Europe Group': 'Renew',
+          'Group of the Greens/European Free Alliance': 'Greens/EFA',
+          'European Conservatives and Reformists Group': 'ECR',
+          'The Left group in the European Parliament - GUE/NGL': 'Left',
+          'Identity and Democracy Group': 'ID',
+          'Non-attached Members': 'NI',
+          'Group of the Alliance of Liberals and Democrats for Europe': 'ALDE',
+          'Europe of Freedom and Direct Democracy Group': 'EFDD',
+          'Europe of Nations and Freedom Group': 'ENF',
+          'Patriots for Europe Group': 'PfE',
+          'Europe of Sovereign Nations': 'ESN',
+          'Europe of Sovereign Nations Group': 'ESN',
+          'Unknown': 'NI'
+        };
+        
+        // Get logo filename
+        const logoFile = GROUP_LOGO_MAPPING[name] || GROUP_LOGO_MAPPING[GROUP_ABBREVIATION_MAPPING[name]];
+        
+        // Get abbreviation
+        const abbr = GROUP_ABBREVIATION_MAPPING[name] || name;
+        
+        if (logoFile) {
+          const encodedLogoFile = encodeURIComponent(logoFile);
+          return `
+            <span class="tooltip touch-tooltip">
+              <div class="group-display inline-flex items-center" style="gap: 0.25rem;">
+                <img src="./logos/${encodedLogoFile}" alt="${abbr}" class="group-logo h-4 w-auto" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';" title="${name}">
+                <span class="group-text hidden" style="font-size: 0.75rem; font-weight: 500;">${abbr}</span>
+              </div>
+              <div class="tooltip-content">${name}</div>
+            </span>
+          `;
+        } else {
+          // Fallback to text only
+          return `
+            <span class="tooltip touch-tooltip">
+              <span class="group-text" style="font-size: 0.75rem; font-weight: 500;" title="${name}">${abbr}</span>
+              <div class="tooltip-content">${name}</div>
+            </span>
+          `;
+        }
+      }
+      const tooltips = document.querySelectorAll('.tooltip');
+      
+      tooltips.forEach(tooltip => {
+        const trigger = tooltip.querySelector('i');
+        const content = tooltip.querySelector('.tooltip-content');
+        
+        if (trigger && content) {
+          trigger.addEventListener('mouseenter', function() {
+            const rect = trigger.getBoundingClientRect();
+            content.style.top = (rect.bottom + 5) + 'px';
+            content.style.left = (rect.left + rect.width/2) + 'px';
+          });
+        }
+      });
+      
+      // Mobile interface interactions
+      const mobileFilterToggle = document.getElementById('mobile-filter-toggle');
+      const mobileFilterContent = document.getElementById('mobile-filter-content');
+      const mobileFilterIcon = document.getElementById('mobile-filter-icon');
+      
+      if (mobileFilterToggle) {
+        mobileFilterToggle.addEventListener('click', function() {
+          const isActive = mobileFilterContent.classList.contains('active');
+          mobileFilterContent.classList.toggle('active');
+          mobileFilterIcon.style.transform = isActive ? 'rotate(0deg)' : 'rotate(180deg)';
+        });
+      }
+      
+      // Mobile advanced settings toggle
+      const mobileAdvancedToggle = document.getElementById('mobile-advanced-toggle');
+      const mobileAdvancedContent = document.getElementById('mobile-advanced-content');
+      const mobileAdvancedIcon = document.getElementById('mobile-advanced-icon');
+      
+      if (mobileAdvancedToggle) {
+        mobileAdvancedToggle.addEventListener('click', function() {
+          const isActive = mobileAdvancedContent.classList.contains('active');
+          mobileAdvancedContent.classList.toggle('active');
+          mobileAdvancedIcon.style.transform = isActive ? 'rotate(0deg)' : 'rotate(180deg)';
+        });
+      }
+      
+      // Sync mobile and desktop filters
+      const mobileTermSelect = document.getElementById('mobile-term-select');
+      const desktopTermSelect = document.getElementById('term-select');
+      const mobileSearch = document.getElementById('mobile-general-search');
+      const desktopSearch = document.getElementById('general-search');
+      
+      if (mobileTermSelect && desktopTermSelect) {
+        // Sync mobile to desktop term changes
+        mobileTermSelect.addEventListener('change', function() {
+          desktopTermSelect.value = this.value;
+          desktopTermSelect.dispatchEvent(new Event('change'));
+          updateMobileTermDisplay(this.value);
+        });
+        
+        // Sync desktop to mobile term changes (bidirectional sync)
+        desktopTermSelect.addEventListener('change', function() {
+          if (mobileTermSelect.value !== this.value) {
+            mobileTermSelect.value = this.value;
+            updateMobileTermDisplay(this.value);
+          }
+        });
+      }
+      
+      if (mobileSearch && desktopSearch) {
+        let searchTimeout;
+        mobileSearch.addEventListener('input', function() {
+          clearTimeout(searchTimeout);
+          searchTimeout = setTimeout(() => {
+            desktopSearch.value = this.value;
+            desktopSearch.dispatchEvent(new Event('input'));
+          }, 300);
+        });
+      }
+      
+      // Sort functionality
+      const mobileSortSelect = document.getElementById('mobile-sort-select');
+      if (mobileSortSelect) {
+        mobileSortSelect.addEventListener('change', function() {
+          const sortBy = this.value;
+          sortMEPData(sortBy);
+        });
+      }
+      
+      function sortMEPData(sortBy) {
+        // Get current data - this would need to be integrated with the main data loading
+        const container = document.getElementById('mobile-mep-cards');
+        if (!container || !window.currentMEPData) return;
+        
+        let sortedData = [...window.currentMEPData];
+        
+        // Sort the data based on selected criteria
+        if (sortBy === 'full_name') {
+          sortedData.sort((a, b) => a.full_name.localeCompare(b.full_name));
+        } else if (sortBy === 'country') {
+          sortedData.sort((a, b) => a.country.localeCompare(b.country));
+        } else if (sortBy === 'final_score') {
+          // Sort by score (highest first)
+          sortedData.sort((a, b) => (b.final_score || 0) - (a.final_score || 0));
+        } else if (sortBy === 'reports_opinions') {
+          // Sort by combined reports & opinions using weighted score
+          sortedData.sort((a, b) => {
+            const getReportsOpinionsWeighted = (mep) => {
+              const reports_rapp = mep.reports_rapporteur || 0;
+              const reports_shadow = mep.reports_shadow || 0;
+              const opinions_rapp = mep.opinions_rapporteur || 0;
+              const opinions_shadow = mep.opinions_shadow || 0;
+              return (reports_rapp * 5.0) + (reports_shadow * 3.0) + (opinions_rapp * 2.0) + (opinions_shadow * 1.0);
+            };
+            return getReportsOpinionsWeighted(b) - getReportsOpinionsWeighted(a);
+          });
+        } else {
+          // Sort by activity counts (numerical, highest first)
+          sortedData.sort((a, b) => (b[sortBy] || 0) - (a[sortBy] || 0));
+        }
+        
+        // Update sort indicator and direction
+        const sortIndicator = document.getElementById('mobile-sort-indicator');
+        const sortDirection = document.getElementById('mobile-sort-direction');
+        if (sortIndicator && sortDirection) {
+          const sortLabels = {
+            'final_score': 'score',
+            'speeches': 'speeches',
+            'amendments': 'amendments', 
+            'reports_opinions': 'reports & opinions',
+            'questions_written': 'written questions',
+            'questions_oral': 'oral questions',
+            'motions': 'motions',
+            'explanations': 'explanations',
+            'full_name': 'name',
+            'country': 'country'
+          };
+          
+          const label = sortLabels[sortBy] || sortBy;
+          const indicatorText = document.getElementById('mobile-sort-indicator-text');
+          if (indicatorText) indicatorText.textContent = `Sorted by ${label}`;
+          sortIndicator.style.display = 'inline-block';
+          
+          // Show direction for numerical/score sorts
+          if (sortBy === 'full_name' || sortBy === 'country') {
+            sortDirection.style.display = 'none';
+          } else {
+            sortDirection.textContent = 'Highest first';
+            sortDirection.style.display = 'block';
+          }
+        }
+        
+        // Re-render with sorted data
+        if (window.renderMobileCards) {
+          window.renderMobileCards(sortedData);
+        }
+      }
+      
+      function updateMobileTermDisplay(term) {
+        const mobileCurrentTerm = document.getElementById('mobile-current-term');
+        if (mobileCurrentTerm) {
+          mobileCurrentTerm.textContent = term;
+        }
+      }
+      
+      // Generate MEP avatar with fallbacks
+      function generateMEPAvatar(mep) {
+        const initials = mep.full_name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+        const colors = [
+          '#3B82F6', '#EF4444', '#10B981', '#F59E0B', 
+          '#8B5CF6', '#06B6D4', '#F97316', '#84CC16'
+        ];
+        const color = colors[mep.mep_id % colors.length];
+        
+        return `
+          <div class="mep-avatar-container">
+            <img src="https://www.europarl.europa.eu/mepphoto/${mep.mep_id}.jpg" 
+                 alt="${mep.full_name}" 
+                 loading="lazy"
+                 onload="this.style.display='block'; this.nextElementSibling.style.display='none';"
+                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <div class="mep-avatar-fallback" style="background: ${color}; display: none;">
+              ${initials}
+            </div>
+          </div>
+        `;
+      }
+      
+      // Mobile card rendering with pagination
+      let currentMobileData = [];
+      let currentMobileIndex = 0;
+      const MOBILE_PAGE_SIZE = 50;
+      
+      function renderMobileCards(data) {
+        console.log('renderMobileCards called with', data ? data.length : 0, 'MEPs');
+        const container = document.getElementById('mobile-mep-cards');
+        const resultsCount = document.getElementById('mobile-results-count');
+        
+        if (!container) {
+          console.error('Mobile cards container not found');
+          return;
+        }
+        
+        // Store data for pagination
+        currentMobileData = data || [];
+        currentMobileIndex = 0;
+        
+        // Clear container including loading state
+        container.innerHTML = '';
+        
+        if (!data || data.length === 0) {
+          container.innerHTML = '<div class="text-center p-4 text-gray-500">No MEP data available</div>';
+          if (resultsCount) {
+            resultsCount.textContent = '0 MEPs found';
+          }
+          return;
+        }
+        
+        console.log('Successfully rendering', data.length, 'mobile cards');
+        
+        if (resultsCount) {
+          resultsCount.textContent = `${data.length} MEPs found`;
+        }
+        
+        // Render initial batch
+        renderMobileCardBatch();
+      }
+      
+      function renderMobileCardBatch() {
+        const container = document.getElementById('mobile-mep-cards');
+        if (!container) return;
+        
+        // Remove existing load more button
+        const existingLoadMore = container.querySelector('.mobile-load-more');
+        if (existingLoadMore) {
+          existingLoadMore.remove();
+        }
+        
+        const endIndex = Math.min(currentMobileIndex + MOBILE_PAGE_SIZE, currentMobileData.length);
+        const batch = currentMobileData.slice(currentMobileIndex, endIndex);
+        
+        // Show default sort indicator and direction
+        const sortIndicator = document.getElementById('mobile-sort-indicator');
+        const sortDirection = document.getElementById('mobile-sort-direction');
+        const sortSelect = document.getElementById('mobile-sort-select');
+        if (sortIndicator && sortDirection && sortSelect && sortSelect.value) {
+          const sortLabels = {
+            'final_score': 'score',
+            'speeches': 'speeches',
+            'amendments': 'amendments', 
+            'reports_opinions': 'reports & opinions',
+            'questions_written': 'written questions',
+            'questions_oral': 'oral questions',
+            'motions': 'motions',
+            'explanations': 'explanations',
+            'full_name': 'name',
+            'country': 'country'
+          };
+          
+          const label = sortLabels[sortSelect.value] || sortSelect.value;
+          const indicatorText2 = document.getElementById('mobile-sort-indicator-text');
+          if (indicatorText2) indicatorText2.textContent = `Sorted by ${label}`;
+          sortIndicator.style.display = 'inline-block';
+          
+          // Show direction for numerical/score sorts
+          if (sortSelect.value === 'full_name' || sortSelect.value === 'country') {
+            sortDirection.style.display = 'none';
+          } else {
+            sortDirection.textContent = 'Highest first';
+            sortDirection.style.display = 'block';
+          }
+        }
+        
+        batch.forEach((mep, index) => {
+          const globalRank = currentMobileIndex + index + 1;
+          const card = document.createElement('div');
+          card.className = 'mobile-mep-card';
+          card.onclick = () => window.location.href = `profile.html?mep_id=${mep.mep_id}&term=${window.currentTerm || 10}`;
+          
+          // Get current sort to determine activity display
+          const sortSelect = document.getElementById('mobile-sort-select');
+          const currentSort = sortSelect ? sortSelect.value : 'final_score';
+          
+          // Define activity labels
+          const activityLabels = {
+            'speeches': 'Speeches',
+            'amendments': 'Amendments',
+            'reports_opinions': 'Reports & Opinions',
+            'questions_written': 'Written Questions',
+            'questions_oral': 'Oral Questions',
+            'motions': 'Motions',
+            'explanations': 'Explanations'
+          };
+          
+          // Calculate unified reports & opinions like desktop version
+          const reportsOpinions = {
+            reports_rapporteur: mep.reports_rapporteur || 0,
+            reports_shadow: mep.reports_shadow || 0,
+            opinions_rapporteur: mep.opinions_rapporteur || 0,
+            opinions_shadow: mep.opinions_shadow || 0
+          };
+          const reportsOpinionsTotal = reportsOpinions.reports_rapporteur + reportsOpinions.reports_shadow + 
+                                      reportsOpinions.opinions_rapporteur + reportsOpinions.opinions_shadow;
+          const reportsOpinionsWeighted = (reportsOpinions.reports_rapporteur * 5.0) + 
+                                         (reportsOpinions.reports_shadow * 3.0) + 
+                                         (reportsOpinions.opinions_rapporteur * 2.0) + 
+                                         (reportsOpinions.opinions_shadow * 1.0);
+          
+          // Create activity display based on current sort
+          let activities = [];
+          
+          if (currentSort === 'final_score') {
+            // Default view: show most significant activities
+            if (mep.speeches > 0) activities.push(`${mep.speeches} Speeches`);
+            if (mep.amendments > 0) activities.push(`${mep.amendments} Amendments`);
+            if (reportsOpinionsTotal > 0) activities.push(`${reportsOpinionsTotal} Reports & Opinions`);
+            if (mep.questions_written > 0) activities.push(`${mep.questions_written} Written Questions`);
+            if (mep.motions > 0) activities.push(`${mep.motions} Motions`);
+          } else {
+            // Activity-specific view: prominently show the selected activity
+            const activityValues = {
+              'speeches': mep.speeches || 0,
+              'amendments': mep.amendments || 0,
+              'reports_opinions': reportsOpinionsTotal,
+              'questions_written': mep.questions_written || 0,
+              'questions_oral': mep.questions_oral || 0,
+              'motions': mep.motions || 0,
+              'explanations': mep.explanations || 0
+            };
+            
+            const activityLabels = {
+              'speeches': 'Speeches',
+              'amendments': 'Amendments',
+              'reports_opinions': 'Reports & Opinions',
+              'questions_written': 'Written Questions',
+              'questions_oral': 'Oral Questions',
+                'motions': 'Motions',
+                  'explanations': 'Explanations'
+            };
+            
+            // Show the selected activity first and prominently
+            if (activityValues[currentSort] > 0) {
+              activities.push(`${activityValues[currentSort]} ${activityLabels[currentSort]}`);
+            }
+            
+            // Add other significant activities
+            Object.entries(activityValues).forEach(([key, value]) => {
+              if (key !== currentSort && value > 0 && activities.length < 4) {
+                activities.push(`${value} ${activityLabels[key]}`);
+              }
+            });
+          }
+          
+          // Determine what to show in the right column based on current sort
+          let displayValue, displayLabel;
+          if (currentSort === 'final_score') {
+            displayValue = (mep.final_score || 0).toFixed(1);
+            displayLabel = 'Score';
+          } else if (currentSort === 'reports_opinions') {
+            displayValue = reportsOpinionsTotal;
+            displayLabel = 'Reports & Opinions';
+          } else if (currentSort === 'full_name' || currentSort === 'country') {
+            displayValue = (mep.final_score || 0).toFixed(1);
+            displayLabel = 'Score';
+          } else {
+            // Show the specific activity value
+            const activityValue = mep[currentSort] || 0;
+            displayValue = activityValue;
+            displayLabel = activityLabels[currentSort] || currentSort;
+          }
+          
+          card.innerHTML = `
+            <div class="mobile-mep-header">
+              ${generateMEPAvatar(mep)}
+              <div class="mobile-mep-info">
+                <h3 class="mobile-mep-name">${mep.full_name}</h3>
+                <div class="mobile-mep-details mobile-mep-meta">
+                  <span class="tooltip touch-tooltip" data-tooltip-id="flag-${index}">
+                    <span class="flag-emoji" title="${mep.country}">${countryToFlag(getCountryCode(mep.country))}</span>
+                    <div class="tooltip-content">${mep.country}</div>
+                  </span>
+                  ${renderGroupLogoBadge(mep.group)}
+                  <span class="national-party">${mep.national_party ? mep.national_party : ''}</span>
+                </div>
+                <div class="mobile-activity-summary">
+                  ${activities.length > 0 ? activities.join(' • ') : 'No recorded activities'}
+                </div>
+              </div>
+              <div class="mobile-mep-score">
+                <div class="mobile-score-label">${displayLabel}</div>
+                <div class="mobile-score-value">${displayValue}</div>
+                <div class="mobile-score-rank">#${globalRank}</div>
+              </div>
+            </div>
+          `;
+          
+          container.appendChild(card);
+        });
+        
+        // Update current index
+        currentMobileIndex = endIndex;
+        
+        // Add "Load More" button if there are more MEPs to show
+        if (currentMobileIndex < currentMobileData.length) {
+          const loadMoreButton = document.createElement('div');
+          loadMoreButton.className = 'mobile-load-more text-center p-4';
+          loadMoreButton.innerHTML = `
+            <button class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+              Load More MEPs (${currentMobileData.length - currentMobileIndex} remaining)
+            </button>
+          `;
+          
+          loadMoreButton.querySelector('button').onclick = () => {
+            renderMobileCardBatch();
+          };
+          
+          container.appendChild(loadMoreButton);
+        }
+      }
+      
+      // Expose mobile card renderer globally
+      window.renderMobileCards = renderMobileCards;
+      
+      // Initialize mobile rendering immediately for early access
+      console.log('Mobile rendering functions initialized');
+      
+      // Trigger initial render if data is already available
+      setTimeout(() => {
+        if (window.currentMEPData && window.currentMEPData.length > 0) {
+          console.log('Auto-triggering mobile render with existing data');
+          renderMobileCards(window.currentMEPData);
+        }
+      }, 100);
+      
+      // Remove mobile table fallback - always use cards on mobile
+
+      // Initialize table horizontal scroll slider
+      function initTableScrollSlider() {
+        const tableContainer = document.querySelector('.table-wrapper');
+        const scrollTrack = document.querySelector('.scroll-track');
+        const scrollThumb = document.getElementById('table-scroll-thumb');
+
+        if (!tableContainer || !scrollTrack || !scrollThumb) return;
+
+        function updateScrollThumb() {
+          // Force a reflow to get accurate measurements
+          tableContainer.offsetWidth;
+          
+          const scrollLeft = tableContainer.scrollLeft;
+          const scrollWidth = tableContainer.scrollWidth;
+          const clientWidth = tableContainer.clientWidth;
+          const trackWidth = scrollTrack.offsetWidth;
+          
+          // If table fits entirely, hide the slider
+          if (scrollWidth <= clientWidth || trackWidth === 0) {
+            scrollThumb.style.display = 'none';
+            return;
+          }
+          
+          scrollThumb.style.display = 'block';
+          
+          // Calculate thumb width (minimum 20px for usability)
+          const thumbWidth = Math.max(20, Math.min(trackWidth * 0.8, (clientWidth / scrollWidth) * trackWidth));
+          
+          // Calculate scroll ratio and thumb position
+          const maxScrollLeft = scrollWidth - clientWidth;
+          const scrollRatio = maxScrollLeft > 0 ? scrollLeft / maxScrollLeft : 0;
+          const maxThumbLeft = trackWidth - thumbWidth;
+          const thumbLeft = scrollRatio * maxThumbLeft;
+          
+          // Apply styles
+          scrollThumb.style.width = `${thumbWidth}px`;
+          scrollThumb.style.left = `${Math.max(0, Math.min(thumbLeft, maxThumbLeft))}px`;
+          
+          // Debug logging (remove in production)
+          // console.log(`Table: ${scrollWidth}px scroll, ${clientWidth}px client, thumb: ${thumbWidth}px at ${thumbLeft}px`);
+        }
+
+        // Update thumb on scroll
+        tableContainer.addEventListener('scroll', updateScrollThumb);
+
+        // Handle thumb drag
+        let isDragging = false;
+        let dragStartX = 0;
+        let dragStartScrollLeft = 0;
+
+        scrollThumb.addEventListener('mousedown', (e) => {
+          isDragging = true;
+          dragStartX = e.clientX;
+          dragStartScrollLeft = tableContainer.scrollLeft;
+          scrollThumb.style.cursor = 'grabbing';
+          e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', (e) => {
+          if (!isDragging) return;
+          
+          e.preventDefault();
+          
+          const deltaX = e.clientX - dragStartX;
+          const trackRect = scrollTrack.getBoundingClientRect();
+          const thumbWidth = scrollThumb.offsetWidth;
+          const maxThumbLeft = trackRect.width - thumbWidth;
+          
+          if (maxThumbLeft <= 0) return; // Prevent division by zero
+          
+          const scrollRatio = deltaX / maxThumbLeft;
+          const maxScroll = tableContainer.scrollWidth - tableContainer.clientWidth;
+          
+          const newScrollLeft = Math.max(0, Math.min(maxScroll, dragStartScrollLeft + (scrollRatio * maxScroll)));
+          tableContainer.scrollLeft = newScrollLeft;
+        });
+
+        document.addEventListener('mouseup', () => {
+          isDragging = false;
+          scrollThumb.style.cursor = 'grab';
+        });
+
+        // Click on track to scroll
+        scrollTrack.addEventListener('click', (e) => {
+          if (e.target === scrollThumb) return;
+          
+          const rect = scrollTrack.getBoundingClientRect();
+          const clickX = e.clientX - rect.left;
+          const thumbWidth = scrollThumb.offsetWidth;
+          const trackWidth = rect.width;
+          
+          // Calculate scroll position based on click position
+          const scrollRatio = Math.max(0, Math.min(1, (clickX - thumbWidth / 2) / (trackWidth - thumbWidth)));
+          const maxScroll = tableContainer.scrollWidth - tableContainer.clientWidth;
+          
+          tableContainer.scrollLeft = scrollRatio * maxScroll;
+        });
+
+        // Watch for table content changes (when columns are added/removed)
+        const tableObserver = new MutationObserver(function() {
+          setTimeout(updateScrollThumb, 50);
+        });
+        
+        // Observe changes to the table structure
+        const table = tableContainer.querySelector('.data-table');
+        if (table) {
+          tableObserver.observe(table, {
+            childList: true,
+            subtree: true,
+            attributes: true,
+            attributeFilter: ['style', 'class']
+          });
+        }
+        
+        // Listen for activity column toggles
+        document.addEventListener('click', function(e) {
+          if (e.target.classList.contains('activity-pill') || e.target.closest('.activity-pill')) {
+            setTimeout(updateScrollThumb, 100);
+          }
+        });
+        
+        // Listen for select all / clear all buttons
+        const selectAllBtn = document.getElementById('select-all-activities');
+        const clearAllBtn = document.getElementById('clear-all-activities');
+        if (selectAllBtn) {
+          selectAllBtn.addEventListener('click', () => setTimeout(updateScrollThumb, 150));
+        }
+        if (clearAllBtn) {
+          clearAllBtn.addEventListener('click', () => setTimeout(updateScrollThumb, 150));
+        }
+        
+        // Initial update with multiple attempts to ensure it works
+        setTimeout(updateScrollThumb, 100);
+        setTimeout(updateScrollThumb, 500);
+        setTimeout(updateScrollThumb, 1000);
+        
+        // Window resize
+        window.addEventListener('resize', updateScrollThumb);
+        
+        // Update when table is scrolled by other means
+        tableContainer.addEventListener('scroll', updateScrollThumb);
+        
+        // Expose update function globally for external calls
+        window.updateTableScrollSlider = updateScrollThumb;
+      }
+
+      // Initialize when DOM is loaded
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initTableScrollSlider);
+      } else {
+        initTableScrollSlider();
+      }
+      
+      // Also expose initialization globally
+      window.initTableScrollSlider = initTableScrollSlider;
+    });
+  </script>
+  
+  <!-- Footer -->
+  <footer class="bg-gray-800 text-white mt-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div class="grid md:grid-cols-3 gap-8">
+        <div>
+          <h3 class="text-lg font-semibold mb-4">MEP Score</h3>
+          <p class="text-gray-300">
+            Transparent overview of activity of members of the European Parliament. Empowering citizens with objective information for democratic accountability.
+          </p>
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold mb-4">Useful Links</h3>
+          <ul class="space-y-2">
+            <li><a href="index.html" class="text-gray-300 hover:text-white transition-colors">MEP Score</a></li>
+            <li><a href="about.html" class="text-gray-300 hover:text-white transition-colors">About</a></li>
+            <li><a href="methodology.html" class="text-gray-300 hover:text-white transition-colors">Methodology</a></li>
+            <li><a href="https://parltrack.org" class="text-gray-300 hover:text-white transition-colors" target="_blank" rel="noopener">Parltrack</a></li>
+            <li><a href="https://europarl.europa.eu" class="text-gray-300 hover:text-white transition-colors" target="_blank" rel="noopener">European Parliament</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold mb-4">Contact</h3>
+          <p class="text-gray-300 text-sm">
+            If you notice any inaccuracies or have suggestions for improvement, please contact us at <a href="mailto:mepscore@gmail.com" class="text-blue-300 hover:text-blue-100 transition-colors">mepscore@gmail.com</a>
+          </p>
+        </div>
+      </div>
+      <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
+        <p class="mb-2">&copy; 2025 MEP Score. All rights reserved.</p>
+        <p class="text-xs">Informational only, no warranties; no liability for use or interpretation of the data; methodology may change.</p>
+      </div>
+    </div>
+  </footer>
+  
+  <!-- Score Breakdown Modal -->
+  <div id="score-modal" class="score-modal">
+    <div class="score-modal-content">
+      <div class="score-modal-header">
+        <h2 id="modal-mep-name" class="text-xl font-bold text-gray-900">Score Breakdown</h2>
+        <button id="modal-close" class="score-modal-close">&times;</button>
+      </div>
+      <div id="modal-content" class="space-y-4">
+        <!-- Content will be dynamically generated -->
+      </div>
+    </div>
+  </div>
+  
+  <!-- Category Indicators Modal -->
+  <div id="category-modal" class="score-modal">
+    <div class="score-modal-content">
+      <div class="score-modal-header">
+        <h2 class="text-xl font-bold text-gray-900">Scoring Categories & Indicators</h2>
+        <button id="category-modal-close" class="score-modal-close">&times;</button>
+      </div>
+      <div class="space-y-6">
+        <!-- Legislative Production -->
+        <div class="category-section">
+          <h3 class="text-lg font-semibold text-green-700 flex items-center mb-3">
+            <i class="fas fa-gavel mr-2"></i>Legislative Production
+          </h3>
+          <p class="text-gray-600 mb-3">Measures active participation in European legislation through reports, opinions, and amendments.</p>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div class="indicator-item">
+              <span class="font-medium">Reports (Rapporteur)</span>
+              <span class="text-sm text-gray-500">Main rapporteur for legislative reports</span>
+            </div>
+            <div class="indicator-item">
+              <span class="font-medium">Reports (Shadow)</span>
+              <span class="text-sm text-gray-500">Shadow rapporteur for reports</span>
+            </div>
+            <div class="indicator-item">
+              <span class="font-medium">Opinions (Rapporteur)</span>
+              <span class="text-sm text-gray-500">Main rapporteur for opinions</span>
+            </div>
+            <div class="indicator-item">
+              <span class="font-medium">Opinions (Shadow)</span>
+              <span class="text-sm text-gray-500">Shadow rapporteur for opinions</span>
+            </div>
+            <div class="indicator-item">
+              <span class="font-medium">Amendments</span>
+              <span class="text-sm text-gray-500">Amendments tabled by the MEP</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Control & Transparency -->
+        <div class="category-section">
+          <h3 class="text-lg font-semibold text-blue-700 flex items-center mb-3">
+            <i class="fas fa-search mr-2"></i>Control & Transparency
+          </h3>
+          <p class="text-gray-600 mb-3">Measures oversight activities and transparency through questions, motions, and explanations.</p>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div class="indicator-item">
+              <span class="font-medium">Questions</span>
+              <span class="text-sm text-gray-500">Questions for written answers</span>
+            </div>
+            <div class="indicator-item">
+              <span class="font-medium">Motions</span>
+              <span class="text-sm text-gray-500">Motions for resolutions</span>
+            </div>
+            <div class="indicator-item">
+              <span class="font-medium">Explanations</span>
+              <span class="text-sm text-gray-500">Explanations of votes</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Engagement & Presence -->
+        <div class="category-section">
+          <h3 class="text-lg font-semibold text-purple-700 flex items-center mb-3">
+            <i class="fas fa-users mr-2"></i>Engagement & Presence
+          </h3>
+          <p class="text-gray-600 mb-3">Measures active participation in parliamentary sessions and voting attendance.</p>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div class="indicator-item">
+              <span class="font-medium">Speeches</span>
+              <span class="text-sm text-gray-500">Plenary speeches delivered</span>
+            </div>
+            <div class="indicator-item">
+              <span class="font-medium">Votes Attended</span>
+              <span class="text-sm text-gray-500">Voting attendance rate</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Institutional Roles -->
+        <div class="category-section">
+          <h3 class="text-lg font-semibold text-orange-700 flex items-center mb-3">
+            <i class="fas fa-crown mr-2"></i>Institutional Roles
+          </h3>
+          <p class="text-gray-600 mb-3">Measures leadership positions and institutional responsibilities within the EP.</p>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div class="indicator-item">
+              <span class="font-medium">EP President</span>
+              <span class="text-sm text-gray-500">European Parliament President</span>
+            </div>
+            <div class="indicator-item">
+              <span class="font-medium">EP Vice President</span>
+              <span class="text-sm text-gray-500">European Parliament Vice President</span>
+            </div>
+            <div class="indicator-item">
+              <span class="font-medium">EP Quaestor</span>
+              <span class="text-sm text-gray-500">European Parliament Quaestor</span>
+            </div>
+            <div class="indicator-item">
+              <span class="font-medium">Committee Chair</span>
+              <span class="text-sm text-gray-500">Chair of parliamentary committee</span>
+            </div>
+            <div class="indicator-item">
+              <span class="font-medium">Committee Vice Chair</span>
+              <span class="text-sm text-gray-500">Vice-chair of parliamentary committee</span>
+            </div>
+            <div class="indicator-item">
+              <span class="font-medium">Committee Member</span>
+              <span class="text-sm text-gray-500">Regular committee membership</span>
+            </div>
+            <div class="indicator-item">
+              <span class="font-medium">Committee Substitute</span>
+              <span class="text-sm text-gray-500">Substitute committee membership</span>
+            </div>
+            <div class="indicator-item">
+              <span class="font-medium">Delegation Chair</span>
+              <span class="text-sm text-gray-500">Chair of parliamentary delegation</span>
+            </div>
+            <div class="indicator-item">
+              <span class="font-medium">Delegation Vice Chair</span>
+              <span class="text-sm text-gray-500">Vice-chair of parliamentary delegation</span>
+            </div>
+            <div class="indicator-item">
+              <span class="font-medium">Delegation Member</span>
+              <span class="text-sm text-gray-500">Regular delegation membership</span>
+            </div>
+            <div class="indicator-item">
+              <span class="font-medium">Delegation Substitute</span>
+              <span class="text-sm text-gray-500">Substitute delegation membership</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Weight Explanation -->
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h4 class="font-semibold text-blue-800 mb-2">How Weights Work</h4>
+          <ul class="text-sm text-blue-700 space-y-1">
+            <li>• <strong>Positive weights (+)</strong>: Higher activity in this category increases the final score</li>
+            <li>• <strong>Negative weights (-)</strong>: Higher activity in this category decreases the final score</li>
+            <li>• <strong>Zero weight (0)</strong>: This category has no impact on the final score</li>
+            <li>• Weights can range from -100% to +100% for each category</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

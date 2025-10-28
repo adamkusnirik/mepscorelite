@@ -1,0 +1,49 @@
+# MEP Ranking Sub-Agents System Requirements
+# Additional requirements for the agent system beyond the main application
+
+# System monitoring and performance
+psutil>=5.9.0
+
+# Async HTTP requests for web fetching
+aiohttp>=3.8.0
+
+# Data validation and analysis
+pandas>=1.5.0
+numpy>=1.24.0
+
+# Testing framework (if not already included)
+pytest>=7.0.0
+pytest-asyncio>=0.21.0
+
+# Coverage analysis
+coverage>=7.0.0
+
+# JSON schema validation
+jsonschema>=4.17.0
+
+# Date/time handling
+python-dateutil>=2.8.0
+
+# Progress bars and CLI enhancements
+tqdm>=4.64.0
+rich>=13.0.0
+
+# Configuration management
+pydantic>=1.10.0
+
+# Logging enhancements
+structlog>=22.0.0
+
+# Optional: Browser automation for E2E testing
+# Uncomment if you want to use selenium for frontend testing
+# selenium>=4.0.0
+# webdriver-manager>=3.8.0
+
+# Optional: Advanced statistical analysis
+# Uncomment if you need advanced statistical features
+# scipy>=1.10.0
+# scikit-learn>=1.2.0
+
+# Optional: Database optimization tools
+# Uncomment if you need advanced database analysis
+# sqlalchemy>=2.0.0

@@ -1,0 +1,21 @@
+[Unit]
+Description=MEP Score Application Server
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/mepscore
+Environment=PATH=/var/www/mepscore/venv/bin
+Environment=PYTHONPATH=/var/www/mepscore
+ExecStart=/var/www/mepscore/venv/bin/python deployment/production_serve.py
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=mixed
+TimeoutStopSec=5
+PrivateTmp=true
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
