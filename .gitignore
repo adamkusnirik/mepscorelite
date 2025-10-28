@@ -46,11 +46,15 @@ data/meps.db.backup
 data/data.db
 data/*.json
 data/parltrack/*.json
-data/parltrack/*.zst
 data/parltrack/**/*.json
-public/data/*.json
 *.tar.gz
 *.json.lz
+
+# Keep optimized compressed datasets and published term data
+!data/parltrack/**/*.json.zst
+!public/data/term*.json
+!public/data/mep_ranking_scores.json
+!public/data/sample_scoring.json
 
 # Node modules
 node_modules/ 
