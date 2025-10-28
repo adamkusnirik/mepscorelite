@@ -923,50 +923,13 @@ document.addEventListener('click', function(e) {
 });
 
 async function showCategoryDetails(categoryKey, categoryLabel, mep) {
-    // Check term early to avoid any loading animations for terms 8-9
     const urlParams = new URLSearchParams(window.location.search);
     const term = parseInt(urlParams.get('term')) || 10;
-    
-    // Create modal structure
+
     const modal = document.createElement('div');
     modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
     modal.style.display = 'flex';
-    
-    // For terms 8-9, show message immediately without any loading animation
-    if (term === 8 || term === 9) {
-        modal.innerHTML = `
-            <div class="bg-white rounded-lg max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col">
-                <div class="flex items-center justify-between p-6 border-b">
-                    <h2 class="text-2xl font-bold text-gray-800">${categoryLabel} - ${mep.full_name}</h2>
-                    <button class="text-gray-400 hover:text-gray-600 text-2xl" onclick="this.closest('.fixed').remove()">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div class="p-6 overflow-y-auto flex-1">
-                    <div class="space-y-6">
-                        <div class="bg-blue-50 rounded-lg p-4 border border-blue-200 text-center">
-                            <h3 class="text-lg font-semibold text-blue-800 mb-2">mepscore.eu says</h3>
-                            <p class="text-blue-700">
-                                Activity details are temporarily unavailable for MEPs from 2014-2024 (Terms 8-9) due to large database optimization in progress on server. This feature is fully available for current MEPs (Term 10: 2024-2029). We apologize for the inconvenience and are working to restore full functionality soon.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        // Close modal when clicking outside
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                modal.remove();
-            }
-        });
-        
-        document.body.appendChild(modal);
-        return; // Exit early for terms 8-9
-    }
-    
-    // Initial loading state with progress (only for term 10)
+
     modal.innerHTML = `
         <div class="bg-white rounded-lg max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col">
             <div class="flex items-center justify-between p-6 border-b">
@@ -978,7 +941,7 @@ async function showCategoryDetails(categoryKey, categoryLabel, mep) {
             <div class="p-6 overflow-y-auto flex-1">
                 <div class="flex flex-col items-center justify-center py-8">
                     <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
-                    <span class="text-lg text-gray-600 mb-4" id="loading-text">Initializing data load...</span>
+                    <span class="text-lg text-gray-600 mb-4" id="loading-text">${term === 10 ? 'Initializing data load...' : 'Loading archived parliamentary records...'}</span>
                     <div class="w-64 bg-gray-200 rounded-full h-2.5 mb-2">
                         <div class="bg-blue-600 h-2.5 rounded-full transition-all duration-300" id="progress-bar" style="width: 0%"></div>
                     </div>
@@ -987,17 +950,16 @@ async function showCategoryDetails(categoryKey, categoryLabel, mep) {
             </div>
         </div>
     `;
-    
-    // Close modal when clicking outside
+
     modal.addEventListener('click', (e) => {
         if (e.target === modal) {
             modal.remove();
         }
     });
-    
+
     document.body.appendChild(modal);
-    
-    // Load detailed data with progress tracking
+
+// Load detailed data with progress tracking
     try {
         const progressBar = modal.querySelector('#progress-bar');
         const progressText = modal.querySelector('#progress-text');
