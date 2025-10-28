@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 Shared helpers for loading large ParlTrack JSON blobs without duplicating code.
 
@@ -12,8 +12,9 @@ from __future__ import annotations
 import io
 import json
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any, Iterable, Iterator
 
+import ijson
 import zstandard as zstd
 
 
@@ -92,3 +93,23 @@ def load_combined_dataset(primary: Path | str, fallbacks: Iterable[Path | str]) 
         raise FileNotFoundError(f"No dataset found for {primary}")
 
     return combined
+
+
+def stream_json_items(path: Path | str) -> Iterator[Any]:
+    """Yield items from a JSON array without loading the entire file into memory."""
+    resolved = resolve_json_path(path)
+    if not resolved.exists():
+        raise FileNotFoundError(f"JSON file not found: {path}")
+
+    if resolved.suffix == ".zst":
+        with resolved.open("rb") as raw:
+            reader = zstd.ZstdDecompressor().stream_reader(raw)
+            text_stream = io.TextIOWrapper(reader, encoding="utf-8")
+            try:
+                yield from ijson.items(text_stream, "item")
+            finally:
+                text_stream.close()
+                reader.close()
+    else:
+        with resolved.open("r", encoding="utf-8") as handle:
+            yield from ijson.items(handle, "item")
