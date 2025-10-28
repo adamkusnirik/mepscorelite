@@ -881,10 +881,10 @@ async function populateScoreBreakdown(mep, term) {
                     <div class="text-sm text-yellow-800">
                         <strong>Range Information for Term ${term}:</strong><br>
                         <span class="text-xs">
-                            • Speeches: ${formatRange(config.statements.speeches_ranges)}<br>
-                            • Explanations: ${formatRange(config.statements.explanations_ranges)}<br>
-                            • Oral Questions: ${formatRange(config.statements.oral_questions_ranges)}<br>
-                            • Amendments: ${formatRange(config.statements.amendment_ranges)}
+                            â€¢ Speeches: ${formatRange(config.statements.speeches_ranges)}<br>
+                            â€¢ Explanations: ${formatRange(config.statements.explanations_ranges)}<br>
+                            â€¢ Oral Questions: ${formatRange(config.statements.oral_questions_ranges)}<br>
+                            â€¢ Amendments: ${formatRange(config.statements.amendment_ranges)}
                         </span>
                     </div>
                 </div>
@@ -1166,421 +1166,77 @@ async function isAPIServerAvailable() {
 }
 
 async function getDetailedDataForCategory(categoryKey, categoryLabel, mep, offset = 0) {
-    // Get URL parameters
     const urlParams = new URLSearchParams(window.location.search);
     const term = parseInt(urlParams.get('term')) || 10;
-    
-    // For terms 8-9, immediately show the temporary unavailable message without any data loading
-    if (term === 8 || term === 9) {
-        return `
-            <div class="space-y-6">
-                <div class="bg-blue-50 rounded-lg p-4 border border-blue-200 text-center">
-                    <h3 class="text-lg font-semibold text-blue-800 mb-2">mepscore.eu says</h3>
-                    <p class="text-blue-700">
-                        Activity details are temporarily unavailable for MEPs from 2014-2024 (Terms 8-9) due to large database optimization in progress on server. This feature is fully available for current MEPs (Term 10: 2024-2029). We apologize for the inconvenience and are working to restore full functionality soon.
-                    </p>
-                </div>
-            </div>
-        `;
-    }
-    
     const mepId = parseInt(urlParams.get('mep_id'));
     const value = mep[categoryKey] || 0;
-    
+
     try {
-        // Check if we're running in static mode (no API server available)
         const isStaticMode = !await isAPIServerAvailable();
-        
+
         if (isStaticMode) {
-            // In static mode, show message that detailed data requires API server
             return `
                 <div class="space-y-6">
-                    <div class="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                        <h3 class="text-lg font-semibold text-blue-800 mb-2">Detailed Data Not Available</h3>
+                    <div class="bg-blue-50 rounded-lg p-4 border border-blue-200 text-center">
+                        <h3 class="text-lg font-semibold text-blue-800 mb-2">Detailed data requires API server</h3>
                         <p class="text-blue-700">
-                            Detailed ${categoryLabel.toLowerCase()} data requires the API server to be running.
-                        </p>
-                        <p class="text-sm text-blue-600 mt-2">
-                            To view detailed parliamentary activities, please start the complete server with:
-                            <code class="bg-blue-100 px-2 py-1 rounded text-xs">python working_api_server.py</code>
+                            The detailed ${categoryLabel.toLowerCase()} list is generated in real time from ParlTrack archives. Please start the API server or connect to the hosted instance to view the full dataset.
                         </p>
                     </div>
                 </div>
             `;
         }
-        
-        // Use the API server for all terms and categories (API handles correct file routing)
-        let response;
-        if (categoryKey === 'amendments') {
-            // Use fetch with extended timeout and one retry fallback (Windows file IO can be slow)
-            const doFetchWithTimeout = async (ms, useSignal = true) => {
-                if (!useSignal) {
-                    const baseUrl = window.location.protocol + '//' + window.location.host;
-                    return fetch(`${baseUrl}/api/mep/${mepId}/category/${categoryKey}?term=${term}&offset=${offset}&limit=15`, {
-                        cache: 'no-store'
-                    });
-                }
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), ms);
-                try {
-                    const baseUrl = window.location.protocol + '//' + window.location.host;
-                    const res = await fetch(`${baseUrl}/api/mep/${mepId}/category/${categoryKey}?term=${term}&offset=${offset}&limit=15`, {
-                        signal: controller.signal,
-                        cache: 'no-store'
-                    });
-                    clearTimeout(timeoutId);
-                    return res;
-                } catch (err) {
-                    clearTimeout(timeoutId);
-                    throw err;
-                }
-            };
 
-            try {
-                // First attempt with 120s timeout
-                response = await doFetchWithTimeout(120000, true);
-            } catch (err) {
-                if (err.name === 'AbortError') {
-                    // Retry once without a timeout
-                    response = await doFetchWithTimeout(0, false);
-                } else {
-                    throw err;
-                }
-            }
-        } else {
-            // Standard fetch for other categories
-            const baseUrl = window.location.protocol + '//' + window.location.host;
-            response = await fetch(`${baseUrl}/api/mep/${mepId}/category/${categoryKey}?term=${term}&offset=${offset}&limit=15`);
-        }
-        
-        const result = await response.json();
-        
-        if (!result.success) {
-            throw new Error(result.error || 'Failed to load data');
-        }
-        
-        const detailsHtml = formatCategoryData(result, categoryLabel, mep.full_name, offset, mep, categoryKey);
-        return detailsHtml;
-        
-    } catch (error) {
-        console.error('Error loading category details:', error);
-        return `
-            <div class="space-y-6">
-                <div class="bg-red-50 rounded-lg p-4 border border-red-200">
-                    <h3 class="text-lg font-semibold text-red-800 mb-2">Error Loading Details</h3>
-                    <p class="text-red-700">
-                        Unable to load detailed data: ${error.message}
-                    </p>
-                    <p class="text-sm text-red-600 mt-2">
-                        Please ensure the API server is running on port 8000 and try again.
-                    </p>
-                </div>
-                
-                <div class="bg-red-50 rounded-lg p-4 border border-red-200">
-                    <h3 class="text-lg font-semibold text-red-800 mb-2">Error Loading Details</h3>
-                    <p class="text-red-700">
-                        Unable to load detailed data: ${error.message}
-                    </p>
-                    <p class="text-sm text-red-600 mt-2">
-                        Please ensure the API server is running on port 8000 and try again.
-                    </p>
-                </div>
-            </div>
-        `;
-    }
-}
-
-function formatCategoryData(result, categoryLabel, mepName, currentOffset = 0, mep = null, categoryKey = null) {
-    const { data, total_count, category, offset, limit, has_more } = result;
-    
-    if (!data || data.length === 0) {
-        return `
-            <div class="space-y-6">
-                <div class="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                    <h3 class="text-lg font-semibold text-blue-800 mb-2">Overview</h3>
-                    <p class="text-gray-700">
-                        <span class="font-medium">${mepName}</span> has no recorded ${categoryLabel.toLowerCase()} 
-                        in the current parliamentary term.
-                    </p>
-                </div>
-            </div>
-        `;
-    }
-    
-    let itemsHtml = '';
-    
-    if (category === 'speeches') {
-        itemsHtml = data.map((speech, index) => `
-            <div class="border-l-4 border-blue-500 pl-4 mb-4 hover:bg-gray-50 p-3 rounded-r">
-                <div class="flex justify-between items-start mb-2">
-                    <h4 class="font-semibold text-gray-800 flex-1">${speech.title || 'Untitled Speech'}</h4>
-                    <span class="text-xs text-gray-500 ml-2">${formatDate(speech.date)}</span>
-                </div>
-                <p class="text-sm text-gray-600 mb-2">Reference: ${speech.reference || 'N/A'}</p>
-                ${speech.dossiers && speech.dossiers.length > 0 ? 
-                    `<div class="text-xs text-blue-600">Dossiers: ${speech.dossiers.join(', ')}</div>` : ''
-                }
-                ${speech.url ? 
-                    `<a href="${speech.url}" target="_blank" class="text-xs text-blue-500 hover:underline inline-flex items-center mt-2">
-                        <i class="fas fa-external-link-alt mr-1"></i>View Original
-                    </a>` : ''
-                }
-            </div>
-        `).join('');
-    } else if (category === 'amendments') {
-        itemsHtml = data.map((amendment, index) => {
-            const amendmentNumber = amendment.seq || currentOffset + index + 1;
-            
-            return `
-                <div class="border-l-4 border-green-500 pl-4 mb-4 hover:bg-gray-50 p-3 rounded-r">
-                    <div class="flex justify-between items-start mb-2">
-                        <h4 class="font-semibold text-gray-800">Amendment ${amendmentNumber}</h4>
-                        <span class="text-xs text-gray-500">${formatDate(amendment.date)}</span>
-                    </div>
-                    <p class="text-sm text-gray-600 mb-2">Reference: ${amendment.reference || 'N/A'}</p>
-                    <p class="text-sm text-gray-600 mb-2">Committee: ${amendment.committee ? (Array.isArray(amendment.committee) ? amendment.committee.join(', ') : amendment.committee) : 'N/A'}</p>
-                    ${amendment.location && amendment.location.length > 0 ? 
-                        `<p class="text-xs text-gray-500 mb-2">Location: ${amendment.location.map(loc => Array.isArray(loc) ? loc.join(' - ') : loc).join('; ')}</p>` : ''
-                    }
-                    ${amendment.authors ? `<p class="text-xs text-blue-600 mb-2">Authors: ${amendment.authors}</p>` : ''}
-                    ${amendment.old && amendment.old.length > 0 ? 
-                        `<div class="mt-2 p-2 bg-red-50 rounded text-sm border-l-2 border-red-300">
-                            <strong class="text-red-800">Original text:</strong><br>
-                            <div class="text-gray-700 italic">${amendment.old.join(' ')}</div>
-                        </div>` : ''
-                    }
-                    ${amendment.new && amendment.new.length > 0 ? 
-                        `<div class="mt-2 p-2 bg-green-50 rounded text-sm border-l-2 border-green-300">
-                            <strong class="text-green-800">Proposed amendment:</strong><br>
-                            <div class="text-gray-700">${amendment.new.join(' ')}</div>
-                        </div>` : ''
-                    }
-                    ${amendment.src ? 
-                        `<a href="${amendment.src}" target="_blank" class="text-xs text-blue-500 hover:underline inline-flex items-center mt-2">
-                            <i class="fas fa-external-link-alt mr-1"></i>View Original Document
-                        </a>` : ''
-                    }
-                </div>
-            `;
-        }).join('');
-    } else if (category === 'questions' || category === 'questions_written') {
-        itemsHtml = data.map((question, index) => `
-            <div class="border-l-4 border-yellow-500 pl-4 mb-4 hover:bg-gray-50 p-3 rounded-r">
-                <div class="flex justify-between items-start mb-2">
-                    <h4 class="font-semibold text-gray-800">${question.title || `Written Question ${index + 1}`}</h4>
-                    <span class="text-xs text-gray-500">${formatDate(question.date)}</span>
-                </div>
-                <p class="text-sm text-gray-600 mb-2">Reference: ${question.reference || 'N/A'}</p>
-                ${question.addressee ? `<p class="text-sm text-blue-600 mb-2">To: ${question.addressee}</p>` : ''}
-                ${question.subject ? `<p class="text-sm text-gray-700 mb-2"><strong>Subject:</strong> ${question.subject}</p>` : ''}
-                ${question.text ? `
-                    <div class="mt-2 p-2 bg-yellow-50 rounded text-sm border-l-2 border-yellow-300">
-                        <strong>Question:</strong> ${question.text.length > 200 ? question.text.substring(0, 200) + '...' : question.text}
-                    </div>
-                ` : ''}
-                ${question.url ? `<p class="mt-2"><a href="${question.url}" target="_blank" class="text-blue-600 hover:underline text-sm">View Document</a></p>` : ''}
-            </div>
-        `).join('');
-    } else if (category === 'questions_oral') {
-        itemsHtml = data.map((question, index) => `
-            <div class="border-l-4 border-orange-500 pl-4 mb-4 hover:bg-gray-50 p-3 rounded-r">
-                <div class="flex justify-between items-start mb-2">
-                    <h4 class="font-semibold text-gray-800">${question.title || `Oral Question ${index + 1}`}</h4>
-                    <span class="text-xs text-gray-500">${formatDate(question.date)}</span>
-                </div>
-                <p class="text-sm text-gray-600 mb-2">Reference: ${question.reference || 'N/A'}</p>
-                ${question.subject ? `<p class="text-sm text-gray-700 mb-2"><strong>Subject:</strong> ${question.subject}</p>` : ''}
-                ${question.text ? `
-                    <div class="mt-2 p-2 bg-orange-50 rounded text-sm border-l-2 border-orange-300">
-                        <strong class="text-yellow-800">Question text:</strong><br>
-                        <div class="text-gray-700">${Array.isArray(question.text) ? question.text.join(' ') : question.text}</div>
-                    </div>
-                ` : ''}
-                ${question.url ? 
-                    `<a href="${question.url}" target="_blank" class="text-xs text-blue-500 hover:underline inline-flex items-center mt-2">
-                        <i class="fas fa-external-link-alt mr-1"></i>View Original Question
-                    </a>` : ''
-                }
-            </div>
-        `).join('');
-    } else if (category === 'motions') {
-        itemsHtml = data.map((motion, index) => `
-            <div class="border-l-4 border-purple-500 pl-4 mb-4 hover:bg-gray-50 p-3 rounded-r">
-                <div class="flex justify-between items-start mb-2">
-                    <h4 class="font-semibold text-gray-800">${motion.title || `Motion ${index + 1}`}</h4>
-                    <span class="text-xs text-gray-500">${formatDate(motion['Date opened'] || motion.date)}</span>
-                </div>
-                ${motion.authors ? `<p class="text-sm text-blue-600 mb-2">Authors: ${motion.authors}</p>` : ''}
-                ${motion['Number of signatories'] ? 
-                    `<p class="text-sm text-green-600 mb-2">Signatories: ${motion['Number of signatories']}</p>` : ''
-                }
-                ${motion['Lapse date'] ? 
-                    `<p class="text-xs text-gray-500 mb-2">Lapse date: ${formatDate(motion['Lapse date'])}</p>` : ''
-                }
-                ${motion.formats && motion.formats.length > 0 ? 
-                    `<div class="mt-2">
-                        <p class="text-xs text-gray-600 mb-1">Available formats:</p>
-                        ${motion.formats.map(format => 
-                            `<a href="${format.url}" target="_blank" class="text-xs text-blue-500 hover:underline mr-3">
-                                <i class="fas fa-file-${format.type.toLowerCase()} mr-1"></i>${format.type} ${format.size || ''}
-                            </a>`
-                        ).join('')}
-                    </div>` : ''
-                }
-            </div>
-        `).join('');
-    } else if (category === 'explanations') {
-        itemsHtml = data.map((explanation, index) => `
-            <div class="border-l-4 border-indigo-500 pl-4 mb-4 hover:bg-gray-50 p-3 rounded-r">
-                <div class="flex justify-between items-start mb-2">
-                    <h4 class="font-semibold text-gray-800">${explanation.title || 'Explanation of Vote'}</h4>
-                    <span class="text-xs text-gray-500">${formatDate(explanation.date)}</span>
-                </div>
-                ${explanation.reference ? 
-                    `<p class="text-sm text-gray-600 mb-2">Reference: ${explanation.reference}</p>` : ''
-                }
-                ${explanation.text ? `
-                    <div class="mt-2 p-3 bg-indigo-50 rounded text-sm border-l-2 border-indigo-300">
-                        <strong class="text-indigo-800">Explanation:</strong><br>
-                        <div class="text-gray-700 mt-1">${explanation.text.length > 300 ? explanation.text.substring(0, 300) + '...' : explanation.text}</div>
-                        ${explanation.text.length > 300 ? 
-                            `<button class="text-indigo-600 hover:text-indigo-800 text-xs mt-2 underline" onclick="this.previousElementSibling.textContent='${explanation.text.replace(/'/g, "\\'")}'; this.style.display='none';">Show full text</button>` : ''
-                        }
-                    </div>
-                ` : ''}
-                ${explanation.dossiers && explanation.dossiers.length > 0 ? 
-                    `<div class="text-xs text-blue-600 mb-2 mt-2">Related Dossiers: ${explanation.dossiers.join(', ')}</div>` : ''
-                }
-                ${explanation.url ? 
-                    `<a href="${explanation.url}" target="_blank" class="text-xs text-blue-500 hover:underline inline-flex items-center mt-2">
-                        <i class="fas fa-external-link-alt mr-1"></i>View Original Explanation
-                    </a>` : ''
-                }
-            </div>
-        `).join('');
-    } else if (category === 'reports_rapporteur' || category === 'reports_shadow') {
-        itemsHtml = data.map((report, index) => `
-            <div class="border-l-4 border-orange-500 pl-4 mb-4 hover:bg-gray-50 p-3 rounded-r">
-                <div class="flex justify-between items-start mb-2">
-                    <h4 class="font-semibold text-gray-800">${report.title || 'Report'}</h4>
-                    <span class="text-xs text-gray-500">${formatDate(report.date)}</span>
-                </div>
-                <p class="text-sm text-gray-600 mb-2">Reference: ${report.reference || 'N/A'}</p>
-                ${report.committee ? `<p class="text-sm text-blue-600 mb-2">Committee: ${Array.isArray(report.committee) ? report.committee.join(', ') : report.committee}</p>` : ''}
-                ${report.procedure ? `<p class="text-xs text-gray-500 mb-2">Procedure: ${report.procedure}</p>` : ''}
-                ${report.dossiers && report.dossiers.length > 0 ? 
-                    `<div class="text-xs text-blue-600 mb-2">Related Dossiers: ${report.dossiers.join(', ')}</div>` : ''
-                }
-                ${report.url ? 
-                    `<a href="${report.url}" target="_blank" class="text-xs text-blue-500 hover:underline inline-flex items-center mt-2">
-                        <i class="fas fa-external-link-alt mr-1"></i>View Original Report
-                    </a>` : ''
-                }
-            </div>
-        `).join('');
-    } else if (category === 'opinions_rapporteur' || category === 'opinions_shadow') {
-        itemsHtml = data.map((opinion, index) => `
-            <div class="border-l-4 border-green-500 pl-4 mb-4 hover:bg-gray-50 p-3 rounded-r">
-                <div class="flex justify-between items-start mb-2">
-                    <h4 class="font-semibold text-gray-800">${opinion.title || 'Opinion'}</h4>
-                    <span class="text-xs text-gray-500">${formatDate(opinion.date)}</span>
-                </div>
-                <p class="text-sm text-gray-600 mb-2">Reference: ${opinion.reference || 'N/A'}</p>
-                ${opinion.pe ? `<p class="text-sm text-blue-600 mb-2">PE Number: ${opinion.pe}</p>` : ''}
-                ${opinion.committee ? `<p class="text-sm text-blue-600 mb-2">Committee: ${Array.isArray(opinion.committee) ? opinion.committee.join(', ') : opinion.committee}</p>` : ''}
-                ${opinion.procedure ? `<p class="text-xs text-gray-500 mb-2">Procedure: ${opinion.procedure}</p>` : ''}
-                ${opinion.dossiers && opinion.dossiers.length > 0 ? 
-                    `<div class="text-xs text-blue-600 mb-2">Related Dossiers: ${opinion.dossiers.join(', ')}</div>` : ''
-                }
-                ${opinion.formats && opinion.formats.length > 0 ? 
-                    `<div class="mt-2">
-                        <p class="text-xs text-gray-600 mb-1">Available formats:</p>
-                        ${opinion.formats.map(format => 
-                            `<a href="${format.url}" target="_blank" class="text-xs text-blue-500 hover:underline mr-3">
-                                <i class="fas fa-file-${format.type.toLowerCase()} mr-1"></i>${format.type} ${format.size || ''}
-                            </a>`
-                        ).join('')}
-                    </div>` : ''
-                }
-            </div>
-        `).join('');
-    } else {
-        // For other categories with limited data
-        itemsHtml = data.map((item, index) => `
-            <div class="border-l-4 border-gray-500 pl-4 mb-4 hover:bg-gray-50 p-3 rounded-r">
-                <h4 class="font-semibold text-gray-800">${item.type || categoryLabel}</h4>
-                <p class="text-sm text-gray-600 mb-2">Count: ${item.count || 0}</p>
-                ${item.description ? `<p class="text-sm text-gray-700 mb-2">${item.description}</p>` : ''}
-                ${item.note ? `<p class="text-xs text-orange-600 mt-2 bg-orange-50 p-2 rounded border-l-2 border-orange-200">${item.note}</p>` : ''}
-            </div>
-        `).join('');
-    }
-    
-    return `
-        <div class="space-y-6">
-            <div class="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                <h3 class="text-lg font-semibold text-blue-800 mb-2">Overview</h3>
-                <p class="text-gray-700">
-                    <span class="font-medium">${mepName}</span> 
-                    <span class="font-bold text-blue-600">${mep && categoryKey ? (mep[categoryKey] || 0) : total_count}</span> ${categoryLabel.toLowerCase()} 
-                    in the current parliamentary term.
-                </p>
-            </div>
-            
-            <div class="bg-white rounded-lg border">
-                <div class="p-4 border-b bg-gray-50">
-                    <h3 class="text-lg font-semibold text-gray-800">Detailed Records</h3>
-                    <p class="text-sm text-gray-600">
-                        Detailed Records
-                    </p>
-                </div>
-                <div class="p-4 max-h-96 overflow-y-auto" id="records-container">
-                    ${itemsHtml}
-                </div>
-                ${has_more ? `
-                    <div class="p-4 border-t bg-gray-50 text-center">
-                        <button class="load-more-btn inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                                data-category="${category}" 
-                                data-category-label="${categoryLabel}" 
-                                data-mep-name="${mepName}" 
-                                data-offset="${offset + limit}">
-                            <i class="fas fa-plus mr-2"></i>
-                            Load More Records
-                        </button>
-                    </div>
-                ` : ''}
-            </div>
-        </div>
-    `;
-}
-
-function formatDate(dateString) {
-    if (!dateString) return 'N/A';
-    try {
-        return new Date(dateString).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short', 
-            day: 'numeric'
+        const baseUrl = window.location.protocol + '//' + window.location.host;
+        const endpoint = `${baseUrl}/api/mep/${mepId}/category/${categoryKey}?term=${term}&offset=${offset}&limit=15`;
+        const response = await fetch(endpoint, {
+            method: 'GET',
+            mode: 'cors',
+            cache: 'no-cache'
         });
-    } catch {
-        return dateString;
-    }
-}
 
-function getIncludesDescription(categoryKey) {
-    const descriptions = {
-        'speeches': '<li>Plenary speeches during debates</li><li>Official interventions on the floor</li><li>Speaking time and frequency</li>',
-        'amendments': '<li>Legislative amendments proposed</li><li>Committee and plenary amendments</li><li>Amendment adoption rates</li>',
-        'reports_rapporteur': '<li>Reports as main rapporteur</li><li>Committee reports and recommendations</li><li>Legislative initiatives led</li>',
-        'reports_shadow': '<li>Reports as shadow rapporteur</li><li>Opposition or alternative positions</li><li>Cross-party collaboration</li>',
-        'questions': '<li>Written questions to Commission</li><li>Parliamentary questions submitted</li><li>Response rates and follow-ups</li>',
-        'motions': '<li>Motions for resolution proposed</li><li>Policy initiatives and statements</li><li>Parliamentary procedure motions</li>',
-        'opinions_rapporteur': '<li>Committee opinions as rapporteur</li><li>Advisory positions on legislation</li><li>Expert recommendations</li>',
-        'opinions_shadow': '<li>Shadow opinions and alternatives</li><li>Minority positions expressed</li><li>Cross-committee input</li>',
-        'explanations': '<li>Explanations of voting behavior</li><li>Justifications for vote choices</li><li>Public voting record clarifications</li>'
-    };
-    
-    return descriptions[categoryKey] || '<li>Parliamentary activity data</li><li>Official records and documentation</li>';
+        if (!response.ok) {
+            throw new Error(`API error ${response.status}`);
+        }
+
+        const result = await response.json();
+
+        if (!result.success) {
+            throw new Error(result.error || 'Unknown API error');
+        }
+
+        if (!result.data || result.data.length === 0) {
+            const archiveHint = term === 8 || term === 9
+                ? '<p class="text-blue-700 mt-2">You are browsing archived parliamentary records. Only activities that took place between 2014-2024 are included.</p>'
+                : '';
+
+            return `
+                <div class="space-y-6">
+                    <div class="bg-blue-50 rounded-lg p-4 border border-blue-200 text-center">
+                        <h3 class="text-lg font-semibold text-blue-800 mb-2">No detailed records found</h3>
+                        <p class="text-blue-700">
+                            There are no recorded ${categoryLabel.toLowerCase()} for this MEP in term ${term}.
+                        </p>
+                        ${archiveHint}
+                    </div>
+                </div>
+            `;
+        }
+
+        return formatCategoryData(result, categoryLabel, mep.full_name, offset, mep, categoryKey);
+    } catch (error) {
+        console.error('Error loading detailed data:', error);
+        return `
+            <div class="space-y-6">
+                <div class="bg-red-50 rounded-lg p-4 border border-red-200 text-center">
+                    <h3 class="text-lg font-semibold text-red-800 mb-2">Unable to load data</h3>
+                    <p class="text-red-700">
+                        ${error.message || 'An unexpected error occurred while loading the activity details.'}
+                    </p>
+                </div>
+            </div>
+        `;
+    }
 }
 
 async function loadMoreRecords(button) {
@@ -2013,16 +1669,16 @@ function generateScoreBreakdownHTML(mep) {
                         <td>${baseScore.toFixed(1)} pts</td>
                     </tr>
                     <tr>
-                        <td>× Institutional Roles Multiplier</td>
-                        <td>×${rolesMultiplier.toFixed(2)}</td>
+                        <td>Ã— Institutional Roles Multiplier</td>
+                        <td>Ã—${rolesMultiplier.toFixed(2)}</td>
                     </tr>
                     <tr>
                         <td>Score with Roles</td>
                         <td>${(mep.score_with_roles || 0).toFixed(1)} pts</td>
                     </tr>
                     <tr>
-                        <td>× Attendance Penalty</td>
-                        <td>×${(mep.attendance_penalty || 1.0).toFixed(2)}</td>
+                        <td>Ã— Attendance Penalty</td>
+                        <td>Ã—${(mep.attendance_penalty || 1.0).toFixed(2)}</td>
                     </tr>
                     <tr class="category-total">
                         <td><strong>Final Score</strong></td>
