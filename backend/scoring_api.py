@@ -8,8 +8,12 @@ from flask_cors import CORS
 from functools import lru_cache
 from pathlib import Path
 
-from mep_score_scorer import MEPScoreScorer
-from file_utils import load_combined_dataset
+try:
+    from .mep_score_scorer import MEPScoreScorer
+    from .file_utils import load_combined_dataset
+except ImportError:
+    from mep_score_scorer import MEPScoreScorer  # type: ignore
+    from file_utils import load_combined_dataset  # type: ignore
 
 app = Flask(__name__)
 CORS(app)
