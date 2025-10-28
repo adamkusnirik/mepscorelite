@@ -11,15 +11,18 @@ from pathlib import Path
 try:
     from .mep_score_scorer import MEPScoreScorer
     from .file_utils import load_combined_dataset
-except ImportError:
+except ImportError:  # pragma: no cover
     from mep_score_scorer import MEPScoreScorer  # type: ignore
     from file_utils import load_combined_dataset  # type: ignore
 
 app = Flask(__name__)
 CORS(app)
 
-scorer = MEPScoreScorer()
-PARLTRACK_DIR = Path("../data/parltrack")
+BASE_DIR = Path(__file__).resolve().parents[1]
+DATA_DIR = BASE_DIR / "data"
+PARLTRACK_DIR = DATA_DIR / "parltrack"
+
+scorer = MEPScoreScorer(db_path=str(DATA_DIR / "meps.db"))
 TERM_FALLBACKS = [8, 9, 10]
 
 @lru_cache(maxsize=1)
