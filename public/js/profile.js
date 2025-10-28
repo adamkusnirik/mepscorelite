@@ -734,7 +734,7 @@ async function populateScoreBreakdown(mep, term) {
     /*
     try {
         // Fetch scoring configuration for the term
-        const baseUrl = window.location.protocol + '//' + window.location.host;
+        const baseUrl = window.location.origin;
         const response = await fetch(`${baseUrl}/api/scoring-config?term=${term}`);
         const configData = await response.json();
         
@@ -1153,7 +1153,7 @@ async function loadActivityDataFromTermFiles(mepId, categoryKey, term, offset, l
 // Check if API server is available
 async function isAPIServerAvailable() {
     try {
-        const baseUrl = window.location.protocol + '//' + window.location.host;
+        const baseUrl = window.location.origin;
         const response = await fetch(`${baseUrl}/api/health`, { 
             method: 'GET',
             mode: 'cors',
@@ -1187,7 +1187,7 @@ async function getDetailedDataForCategory(categoryKey, categoryLabel, mep, offse
             `;
         }
 
-        const baseUrl = window.location.protocol + '//' + window.location.host;
+        const baseUrl = window.location.origin;
         const endpoint = `${baseUrl}/api/mep/${mepId}/category/${categoryKey}?term=${term}&offset=${offset}&limit=15`;
         const response = await fetch(endpoint, {
             method: 'GET',
@@ -1265,7 +1265,7 @@ async function loadMoreRecords(button) {
         const term = parseInt(urlParams.get('term')) || 10;
         
         // Fetch more data using API server (handles correct file routing for all terms)
-        const baseUrl = window.location.protocol + '//' + window.location.host;
+        const baseUrl = window.location.origin;
         const response = await fetch(`${baseUrl}/api/mep/${mepId}/category/${category}?term=${term}&offset=${newOffset}&limit=15`);
         const result = await response.json();
         
