@@ -8,3 +8,5 @@ colorama==0.4.6
 flask>=2.0.0
 flask-cors>=3.0.0
 ijson>=3.1.0 
+zstandard>=0.22.0
+gunicorn>=21.2.0

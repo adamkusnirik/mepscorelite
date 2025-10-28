@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: mepscorelite-api
+    env: python
+    plan: free
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    startCommand: gunicorn backend.scoring_api:app --bind 0.0.0.0:$PORT
+    envVars:
+      - key: PYTHONUNBUFFERED
+        value: "1"

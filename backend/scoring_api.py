@@ -5,18 +5,34 @@ API endpoint for the scoring system
 
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-from mep_score_scorer import MEPScoreScorer
-import sqlite3
+from functools import lru_cache
 from pathlib import Path
 
+from mep_score_scorer import MEPScoreScorer
 from file_utils import load_combined_dataset
 
 app = Flask(__name__)
 CORS(app)
 
 scorer = MEPScoreScorer()
-DB_PATH = Path("../data/meps.db")
 PARLTRACK_DIR = Path("../data/parltrack")
+TERM_FALLBACKS = [8, 9, 10]
+
+@lru_cache(maxsize=1)
+def get_activities_data():
+    """Load (and cache) activities data across all terms."""
+    return load_combined_dataset(
+        PARLTRACK_DIR / "ep_mep_activities.json",
+        [PARLTRACK_DIR / f"ep_mep_activities_term{t}.json" for t in TERM_FALLBACKS],
+    )
+
+@lru_cache(maxsize=1)
+def get_amendments_data():
+    """Load (and cache) amendments data across all terms."""
+    return load_combined_dataset(
+        PARLTRACK_DIR / "ep_amendments.json",
+        [PARLTRACK_DIR / f"ep_amendments_term{t}.json" for t in TERM_FALLBACKS],
+    )
 
 @app.route('/api/score', methods=['GET', 'POST'])
 def get_scores():
@@ -70,17 +86,10 @@ def get_mep_category_details(mep_id, category):
         offset = int(request.args.get('offset', 0))
         limit = int(request.args.get('limit', 15))
         
-        conn = sqlite3.connect(DB_PATH)
-        conn.row_factory = sqlite3.Row
-        cursor = conn.cursor()
-        
         # Load ParlTrack data based on category
         if category == 'speeches':
             # Load speeches from activities data
-            activities_data = load_combined_dataset(
-                PARLTRACK_DIR / "ep_mep_activities.json",
-                [PARLTRACK_DIR / f"ep_mep_activities_term{t}.json" for t in (8, 9, 10)],
-            )
+            activities_data = get_activities_data()
             # Find MEP's speeches
             mep_data = next((mep for mep in activities_data if mep.get('mep_id') == mep_id), None)
             if not mep_data:
@@ -112,10 +121,7 @@ def get_mep_category_details(mep_id, category):
         
         elif category == 'amendments':
             # Load amendments from amendments data
-            amendments_data = load_combined_dataset(
-                PARLTRACK_DIR / "ep_amendments.json",
-                [PARLTRACK_DIR / f"ep_amendments_term{t}.json" for t in (8, 9, 10)],
-            )
+            amendments_data = get_amendments_data()
             # Find MEP's amendments and filter by term
             mep_amendments = []
             for amend in amendments_data:
@@ -150,26 +156,33 @@ def get_mep_category_details(mep_id, category):
                 'data': paginated_data
             })
         
-        elif category in ['questions', 'motions', 'reports_rapporteur', 'reports_shadow', 'opinions_rapporteur', 'opinions_shadow', 'explanations']:
+        elif category in ['questions', 'questions_written', 'questions_oral', 'motions', 'reports_rapporteur',
+                          'reports_shadow', 'opinions_rapporteur', 'opinions_shadow', 'explanations']:
             # Handle different activity types from activities data
-            activities_data = load_combined_dataset(
-                PARLTRACK_DIR / "ep_mep_activities.json",
-                [PARLTRACK_DIR / f"ep_mep_activities_term{t}.json" for t in (8, 9, 10)],
-            )
+            activities_data = get_activities_data()
             mep_data = next((mep for mep in activities_data if mep.get('mep_id') == mep_id), None)
             if not mep_data:
                 return jsonify({'success': False, 'error': 'MEP not found'}), 404
             
-            if category == 'questions':
+            if category in ['questions', 'questions_written']:
                 # Handle written questions
-                questions = mep_data.get('WQUEST', [])
+                questions = mep_data.get('WQ', [])
                 filtered_data = [q for q in questions if q.get('term', 0) == term]
                 # Sort by date (newest first)
                 filtered_data.sort(key=lambda x: x.get('date', ''), reverse=True)
+
+            elif category == 'questions_oral':
+                oral_questions = mep_data.get('OQ', [])
+                filtered_data = [q for q in oral_questions if q.get('term', 0) == term]
+                filtered_data.sort(key=lambda x: x.get('date', ''), reverse=True)
                 
             elif category == 'motions':
-                # Handle motions - look in various fields
-                motions = mep_data.get('MOTIONS', []) + mep_data.get('WDECL', [])
+                # Handle motions - consider multiple activity buckets
+                motions = (
+                    mep_data.get('MOTION', []) +
+                    mep_data.get('IMOTION', []) +
+                    mep_data.get('WDECL', [])
+                )
                 filtered_data = [m for m in motions if m.get('term', 0) == term]
                 # Sort by date (newest first) 
                 filtered_data.sort(key=lambda x: x.get('Date opened', x.get('date', '')), reverse=True)
@@ -186,22 +199,16 @@ def get_mep_category_details(mep_id, category):
                 filtered_data.sort(key=lambda x: x.get('date', ''), reverse=True)
                 
             else:
-                # For reports and opinions, we need to check database
-                cursor.execute("""
-                    SELECT * FROM activities 
-                    WHERE mep_id = ? AND term = ?
-                """, (mep_id, term))
-                activity_row = cursor.fetchone()
-                
-                if not activity_row:
-                    filtered_data = []
-                else:
-                    # Return summary info since detailed breakdown isn't available
-                    filtered_data = [{
-                        'type': category,
-                        'count': activity_row[category] if category in activity_row.keys() else 0,
-                        'note': 'Detailed breakdown not available in current dataset'
-                    }]
+                key_map = {
+                    'reports_rapporteur': 'REPORT',
+                    'reports_shadow': 'REPORT-SHADOW',
+                    'opinions_rapporteur': 'COMPARL',
+                    'opinions_shadow': 'COMPARL-SHADOW',
+                }
+                activity_key = key_map.get(category)
+                items = mep_data.get(activity_key, []) if activity_key else []
+                filtered_data = [item for item in items if item.get('term', 0) == term]
+                filtered_data.sort(key=lambda x: x.get('date', ''), reverse=True)
             
             # Apply pagination
             paginated_data = filtered_data[offset:offset + limit]
@@ -226,9 +233,17 @@ def get_mep_category_details(mep_id, category):
             'success': False,
             'error': str(e)
         }), 500
-    finally:
-        if 'conn' in locals():
-            conn.close()
+
+@app.route('/api/health', methods=['GET'])
+def health_check():
+    """Simple health check endpoint."""
+    try:
+        # Ensure cached datasets are reachable
+        get_activities_data()
+        get_amendments_data()
+        return jsonify({'success': True, 'status': 'ok'})
+    except Exception as exc:
+        return jsonify({'success': False, 'status': 'error', 'error': str(exc)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, port=5001)
