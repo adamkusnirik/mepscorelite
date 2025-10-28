@@ -11,7 +11,10 @@ import sqlite3
 import json
 import math
 from typing import Dict, List, Tuple, Optional
-from outlier_based_scorer import OutlierBasedScorer
+try:
+    from .outlier_based_scorer import OutlierBasedScorer
+except ImportError:
+    from outlier_based_scorer import OutlierBasedScorer  # type: ignore
 
 class MEPRankingScorer:
     def __init__(self, db_path: str = "data/meps.db"):
