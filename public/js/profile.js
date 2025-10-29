@@ -36,6 +36,24 @@ const updateNavigationLinks = () => {
 // Initialize navigation links
 updateNavigationLinks();
 
+function getApiBaseUrl() {
+    if (window.API_BASE_URL) {
+        return window.API_BASE_URL;
+    }
+
+    const { protocol, hostname } = window.location;
+
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+        return `${protocol}//${hostname}:8000`;
+    }
+
+    if (hostname.endsWith('vercel.app') || hostname.endsWith('mepscore.eu')) {
+        return 'https://mepscorelite-api.onrender.com';
+    }
+
+    return window.location.origin;
+}
+
 // DOM elements
 const loadingEl = document.getElementById('loading-state');
 const errorEl = document.getElementById('error-state');
@@ -1153,7 +1171,7 @@ async function loadActivityDataFromTermFiles(mepId, categoryKey, term, offset, l
 // Check if API server is available
 async function isAPIServerAvailable() {
     try {
-        const baseUrl = window.location.origin;
+        const baseUrl = getApiBaseUrl();
         const response = await fetch(`${baseUrl}/api/health`, { 
             method: 'GET',
             mode: 'cors',
@@ -1187,7 +1205,7 @@ async function getDetailedDataForCategory(categoryKey, categoryLabel, mep, offse
             `;
         }
 
-        const baseUrl = window.location.origin;
+        const baseUrl = getApiBaseUrl();
         const endpoint = `${baseUrl}/api/mep/${mepId}/category/${categoryKey}?term=${term}&offset=${offset}&limit=15`;
         const response = await fetch(endpoint, {
             method: 'GET',
@@ -1265,7 +1283,7 @@ async function loadMoreRecords(button) {
         const term = parseInt(urlParams.get('term')) || 10;
         
         // Fetch more data using API server (handles correct file routing for all terms)
-        const baseUrl = window.location.origin;
+        const baseUrl = getApiBaseUrl();
         const response = await fetch(`${baseUrl}/api/mep/${mepId}/category/${category}?term=${term}&offset=${newOffset}&limit=15`);
         const result = await response.json();
         
@@ -1466,6 +1484,281 @@ async function loadMoreRecords(button) {
             <p class="text-sm text-red-600 mt-2">Please check your connection and try again.</p>
         `;
         button.parentNode.insertBefore(errorDiv, button);
+    }
+}
+
+function formatCategoryData(result, categoryLabel, mepName, currentOffset = 0, mep = null, categoryKey = null) {
+    const { data, total_count, category, offset, limit, has_more } = result;
+
+    if (!Array.isArray(data) || data.length === 0) {
+        return `
+            <div class="space-y-6">
+                <div class="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                    <h3 class="text-lg font-semibold text-blue-800 mb-2">Overview</h3>
+                    <p class="text-gray-700">
+                        <span class="font-medium">${mepName}</span> has no recorded ${categoryLabel.toLowerCase()} in the selected parliamentary term.
+                    </p>
+                </div>
+            </div>
+        `;
+    }
+
+    const resolvedTotal = typeof total_count === 'number' ? total_count : data.length;
+    const mepCategoryTotal = mep && categoryKey && typeof mep[categoryKey] === 'number'
+        ? mep[categoryKey]
+        : resolvedTotal;
+
+    let itemsHtml = '';
+
+    if (category === 'speeches') {
+        itemsHtml = data.map(speech => `
+            <div class="border-l-4 border-blue-500 pl-4 mb-4 hover:bg-gray-50 p-3 rounded-r">
+                <div class="flex justify-between items-start mb-2">
+                    <h4 class="font-semibold text-gray-800 flex-1">${speech.title || 'Untitled Speech'}</h4>
+                    <span class="text-xs text-gray-500 ml-2">${formatDate(speech.date)}</span>
+                </div>
+                <p class="text-sm text-gray-600 mb-2">Reference: ${speech.reference || 'N/A'}</p>
+                ${speech.dossiers && speech.dossiers.length > 0
+                    ? `<div class="text-xs text-blue-600">Dossiers: ${speech.dossiers.join(', ')}</div>`
+                    : ''}
+                ${speech.url
+                    ? `<a href="${speech.url}" target="_blank" class="text-xs text-blue-500 hover:underline inline-flex items-center mt-2">
+                        <i class="fas fa-external-link-alt mr-1"></i>View Original
+                    </a>`
+                    : ''}
+            </div>
+        `).join('');
+    } else if (category === 'amendments') {
+        itemsHtml = data.map((amendment, index) => {
+            const amendmentNumber = amendment.seq || currentOffset + index + 1;
+            const committee = amendment.committee;
+            const committeeDisplay = Array.isArray(committee)
+                ? committee.join(', ')
+                : (committee || 'N/A');
+
+            return `
+                <div class="border-l-4 border-green-500 pl-4 mb-4 hover:bg-gray-50 p-3 rounded-r">
+                    <div class="flex justify-between items-start mb-2">
+                        <h4 class="font-semibold text-gray-800">Amendment ${amendmentNumber}</h4>
+                        <span class="text-xs text-gray-500">${formatDate(amendment.date)}</span>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-2">Reference: ${amendment.reference || 'N/A'}</p>
+                    <p class="text-sm text-gray-600 mb-2">Committee: ${committeeDisplay}</p>
+                    ${amendment.location && amendment.location.length > 0
+                        ? `<p class="text-xs text-gray-500 mb-2">Location: ${amendment.location.map(loc => Array.isArray(loc) ? loc.join(' - ') : loc).join('; ')}</p>`
+                        : ''}
+                    ${amendment.authors
+                        ? `<p class="text-xs text-blue-600 mb-2">Authors: ${amendment.authors}</p>`
+                        : ''}
+                    ${amendment.old && amendment.old.length > 0
+                        ? `<div class="mt-2 p-2 bg-red-50 rounded text-sm border-l-2 border-red-300">
+                            <strong class="text-red-800">Original text:</strong><br>
+                            <div class="text-gray-700 italic">${amendment.old.join(' ')}</div>
+                        </div>`
+                        : ''}
+                    ${amendment.new && amendment.new.length > 0
+                        ? `<div class="mt-2 p-2 bg-green-50 rounded text-sm border-l-2 border-green-300">
+                            <strong class="text-green-800">Proposed amendment:</strong><br>
+                            <div class="text-gray-700">${amendment.new.join(' ')}</div>
+                        </div>`
+                        : ''}
+                    ${amendment.src
+                        ? `<a href="${amendment.src}" target="_blank" class="text-xs text-blue-500 hover:underline inline-flex items-center mt-2">
+                            <i class="fas fa-external-link-alt mr-1"></i>View Original Document
+                        </a>`
+                        : ''}
+                </div>
+            `;
+        }).join('');
+    } else if (category === 'questions' || category === 'questions_written') {
+        itemsHtml = data.map((question, index) => `
+            <div class="border-l-4 border-yellow-500 pl-4 mb-4 hover:bg-gray-50 p-3 rounded-r">
+                <div class="flex justify-between items-start mb-2">
+                    <h4 class="font-semibold text-gray-800">${question.title || `Written Question ${currentOffset + index + 1}`}</h4>
+                    <span class="text-xs text-gray-500">${formatDate(question.date)}</span>
+                </div>
+                <p class="text-sm text-gray-600 mb-2">Reference: ${question.reference || 'N/A'}</p>
+                ${question.addressee ? `<p class="text-sm text-blue-600 mb-2">To: ${question.addressee}</p>` : ''}
+                ${question.subject ? `<p class="text-sm text-gray-700 mb-2"><strong>Subject:</strong> ${question.subject}</p>` : ''}
+                ${question.text
+                    ? `<div class="mt-2 p-2 bg-yellow-50 rounded text-sm border-l-2 border-yellow-300">
+                        <strong>Question:</strong> ${question.text.length > 200 ? question.text.substring(0, 200) + '...' : question.text}
+                    </div>`
+                    : ''}
+                ${question.url
+                    ? `<p class="mt-2"><a href="${question.url}" target="_blank" class="text-blue-600 hover:underline text-sm">View Document</a></p>`
+                    : ''}
+            </div>
+        `).join('');
+    } else if (category === 'questions_oral') {
+        itemsHtml = data.map((question, index) => `
+            <div class="border-l-4 border-orange-500 pl-4 mb-4 hover:bg-gray-50 p-3 rounded-r">
+                <div class="flex justify-between items-start mb-2">
+                    <h4 class="font-semibold text-gray-800">${question.title || `Oral Question ${currentOffset + index + 1}`}</h4>
+                    <span class="text-xs text-gray-500">${formatDate(question.date)}</span>
+                </div>
+                <p class="text-sm text-gray-600 mb-2">Reference: ${question.reference || 'N/A'}</p>
+                ${question.subject ? `<p class="text-sm text-gray-700 mb-2"><strong>Subject:</strong> ${question.subject}</p>` : ''}
+                ${question.text
+                    ? `<div class="mt-2 p-2 bg-orange-50 rounded text-sm border-l-2 border-orange-300">
+                        <strong class="text-yellow-800">Question text:</strong><br>
+                        <div class="text-gray-700">${Array.isArray(question.text) ? question.text.join(' ') : question.text}</div>
+                    </div>`
+                    : ''}
+                ${question.url
+                    ? `<a href="${question.url}" target="_blank" class="text-xs text-blue-500 hover:underline inline-flex items-center mt-2">
+                        <i class="fas fa-external-link-alt mr-1"></i>View Original Question
+                    </a>`
+                    : ''}
+            </div>
+        `).join('');
+    } else if (category === 'motions') {
+        itemsHtml = data.map((motion, index) => `
+            <div class="border-l-4 border-purple-500 pl-4 mb-4 hover:bg-gray-50 p-3 rounded-r">
+                <div class="flex justify-between items-start mb-2">
+                    <h4 class="font-semibold text-gray-800">${motion.title || `Motion ${currentOffset + index + 1}`}</h4>
+                    <span class="text-xs text-gray-500">${formatDate(motion['Date opened'] || motion.date)}</span>
+                </div>
+                ${motion.authors ? `<p class="text-sm text-blue-600 mb-2">Authors: ${motion.authors}</p>` : ''}
+                ${motion['Number of signatories']
+                    ? `<p class="text-sm text-green-600 mb-2">Signatories: ${motion['Number of signatories']}</p>`
+                    : ''}
+                ${motion['Lapse date']
+                    ? `<p class="text-xs text-gray-500 mb-2">Lapse date: ${formatDate(motion['Lapse date'])}</p>`
+                    : ''}
+                ${motion.formats && motion.formats.length > 0
+                    ? `<div class="mt-2">
+                        <p class="text-xs text-gray-600 mb-1">Available formats:</p>
+                        ${motion.formats.map(format => `
+                            <a href="${format.url}" target="_blank" class="text-xs text-blue-500 hover:underline mr-3">
+                                <i class="fas fa-file-${(format.type || '').toLowerCase()} mr-1"></i>${format.type || 'Doc'} ${format.size || ''}
+                            </a>
+                        `).join('')}
+                    </div>`
+                    : ''}
+            </div>
+        `).join('');
+    } else if (category === 'explanations') {
+        itemsHtml = data.map(explanation => {
+            const truncated = explanation.text && explanation.text.length > 300
+                ? explanation.text.substring(0, 300) + '...'
+                : explanation.text || '';
+            const escapedFullText = explanation.text
+                ? explanation.text.replace(/'/g, "\\'")
+                : '';
+
+            return `
+                <div class="border-l-4 border-indigo-500 pl-4 mb-4 hover:bg-gray-50 p-3 rounded-r">
+                    <div class="flex justify-between items-start mb-2">
+                        <h4 class="font-semibold text-gray-800">${explanation.title || 'Explanation of Vote'}</h4>
+                        <span class="text-xs text-gray-500">${formatDate(explanation.date)}</span>
+                    </div>
+                    ${explanation.reference
+                        ? `<p class="text-sm text-gray-600 mb-2">Reference: ${explanation.reference}</p>`
+                        : ''}
+                    ${explanation.text
+                        ? `<div class="mt-2 p-3 bg-indigo-50 rounded text-sm border-l-2 border-indigo-300">
+                            <strong class="text-indigo-800">Explanation:</strong><br>
+                            <div class="text-gray-700 mt-1">${truncated}</div>
+                            ${explanation.text.length > 300
+                                ? `<button class="text-indigo-600 hover:text-indigo-800 text-xs mt-2 underline"
+                                    onclick="this.previousElementSibling.textContent='${escapedFullText}'; this.style.display='none';">
+                                    Show full text
+                                </button>`
+                                : ''}
+                        </div>`
+                        : ''}
+                    ${explanation.dossiers && explanation.dossiers.length > 0
+                        ? `<div class="text-xs text-blue-600 mb-2 mt-2">Related Dossiers: ${explanation.dossiers.join(', ')}</div>`
+                        : ''}
+                    ${explanation.url
+                        ? `<a href="${explanation.url}" target="_blank" class="text-xs text-blue-500 hover:underline inline-flex items-center mt-2">
+                            <i class="fas fa-external-link-alt mr-1"></i>View Original Explanation
+                        </a>`
+                        : ''}
+                </div>
+            `;
+        }).join('');
+    } else if (category === 'reports_rapporteur' || category === 'reports_shadow' || category === 'opinions_rapporteur' || category === 'opinions_shadow') {
+        itemsHtml = data.map((item, index) => `
+            <div class="border-l-4 border-gray-500 pl-4 mb-4 hover:bg-gray-50 p-3 rounded-r">
+                <div class="flex justify-between items-start mb-2">
+                    <h4 class="font-semibold text-gray-800">${item.title || `Document ${currentOffset + index + 1}`}</h4>
+                    <span class="text-xs text-gray-500">${formatDate(item.date)}</span>
+                </div>
+                ${item.dossiers && item.dossiers.length > 0
+                    ? `<p class="text-xs text-blue-600 mb-2">Dossiers: ${item.dossiers.join(', ')}</p>`
+                    : ''}
+                ${item.url
+                    ? `<a href="${item.url}" target="_blank" class="text-xs text-blue-500 hover:underline inline-flex items-center mt-2">
+                        <i class="fas fa-external-link-alt mr-1"></i>View Document
+                    </a>`
+                    : ''}
+            </div>
+        `).join('');
+    } else {
+        itemsHtml = data.map((item, index) => `
+            <div class="border-l-4 border-gray-500 pl-4 mb-4 hover:bg-gray-50 p-3 rounded-r">
+                <h4 class="font-semibold text-gray-800">${item.title || item.type || `Item ${currentOffset + index + 1}`}</h4>
+                <p class="text-sm text-gray-600">${formatDate(item.date)}</p>
+                ${item.count ? `<p class="text-sm text-blue-600">Count: ${item.count}</p>` : ''}
+                ${item.note ? `<p class="text-xs text-orange-600">${item.note}</p>` : ''}
+            </div>
+        `).join('');
+    }
+
+    return `
+        <div class="space-y-6">
+            <div class="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                <h3 class="text-lg font-semibold text-blue-800 mb-2">Overview</h3>
+                <p class="text-gray-700">
+                    <span class="font-medium">${mepName}</span> has recorded
+                    <span class="font-bold text-blue-600">${mepCategoryTotal}</span> ${categoryLabel.toLowerCase()}
+                    in the selected parliamentary term.
+                </p>
+            </div>
+
+            <div class="bg-white rounded-lg border">
+                <div class="p-4 border-b bg-gray-50">
+                    <h3 class="text-lg font-semibold text-gray-800">Detailed Records</h3>
+                    <p class="text-sm text-gray-600">
+                        Latest ${categoryLabel.toLowerCase()} pulled directly from the parliamentary activity archive.
+                    </p>
+                </div>
+                <div class="p-4 max-h-96 overflow-y-auto" id="records-container">
+                    ${itemsHtml}
+                </div>
+                ${has_more
+                    ? `<div class="p-4 border-t bg-gray-50 text-center">
+                        <button class="load-more-btn inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                                data-category="${category}"
+                                data-category-label="${categoryLabel}"
+                                data-mep-name="${mepName}"
+                                data-offset="${offset + limit}">
+                            <i class="fas fa-plus mr-2"></i>
+                            Load More Records
+                        </button>
+                    </div>`
+                    : ''}
+            </div>
+        </div>
+    `;
+}
+
+function formatDate(dateString) {
+    if (!dateString) {
+        return 'N/A';
+    }
+
+    try {
+        return new Date(dateString).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        });
+    } catch (error) {
+        console.warn('Unable to format date:', dateString, error);
+        return dateString;
     }
 }
 
