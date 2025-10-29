@@ -3,10 +3,15 @@
 
 from __future__ import annotations
 
-from flask import Flask, jsonify, request
-from flask_cors import CORS
+import json
+import sqlite3
+import threading
+import zlib
 from pathlib import Path
 from typing import Dict, Iterable, Iterator, List, Optional
+
+from flask import Flask, jsonify, request
+from flask_cors import CORS
 
 try:
     from .mep_score_scorer import MEPScoreScorer
@@ -34,6 +39,64 @@ TERM_YEAR_RANGES = {
     9: (2019, 2024),
     10: (2024, 2030),
 }
+
+AMENDMENTS_DB_PATH = DATA_DIR / "amendments_index.db"
+_amendments_conn: Optional[sqlite3.Connection] = None
+_amendments_lock = threading.Lock()
+
+
+def _ensure_amendments_connection() -> Optional[sqlite3.Connection]:
+    """Return a shared connection to the optional amendments index if available."""
+    global _amendments_conn
+    if not AMENDMENTS_DB_PATH.exists():
+        return None
+    if _amendments_conn is not None:
+        return _amendments_conn
+    with _amendments_lock:
+        if _amendments_conn is None:
+            conn = sqlite3.connect(str(AMENDMENTS_DB_PATH), check_same_thread=False)
+            conn.row_factory = sqlite3.Row
+            _amendments_conn = conn
+    return _amendments_conn
+
+
+def _parse_json_field(value: Optional[object]) -> Optional[List]:
+    if value is None:
+        return None
+    if isinstance(value, (bytes, bytearray)):
+        try:
+            decoded = zlib.decompress(value).decode("utf-8")
+        except Exception:
+            decoded = value.decode("utf-8", errors="replace")
+    else:
+        text = str(value).strip()
+        if not text:
+            return None
+        decoded = text
+    try:
+        parsed = json.loads(decoded)
+        if isinstance(parsed, list):
+            return parsed
+        return [parsed]
+    except json.JSONDecodeError:
+        return [decoded]
+
+
+def _parse_authors(value: Optional[str]) -> Optional[object]:
+    if value is None:
+        return None
+    text = value.strip()
+    if not text:
+        return None
+    if text.startswith("[") or text.startswith("{"):
+        try:
+            parsed = json.loads(text)
+            if isinstance(parsed, list):
+                return ", ".join(str(item) for item in parsed)
+            return parsed
+        except json.JSONDecodeError:
+            return text
+    return text
 
 
 def _get_term_file(prefix: str, term: int) -> Path:
@@ -148,6 +211,61 @@ def get_mep_category_details(mep_id: int, category: str):
     limit = int(request.args.get('limit', 15))
 
     if category == 'amendments':
+        conn = _ensure_amendments_connection()
+        if conn:
+            cursor = conn.cursor()
+            total_row = cursor.execute(
+                """
+                SELECT COUNT(*)
+                FROM amendment_mep am
+                JOIN amendments a ON a.id = am.amendment_id
+                WHERE am.mep_id = ? AND a.term = ?
+                """,
+                (mep_id, term),
+            ).fetchone()
+            total = int(total_row[0]) if total_row else 0
+
+            records = cursor.execute(
+                """
+                SELECT a.seq, a.date, a.reference, a.title, a.committee, a.location,
+                       a.authors, a.new_json, a.old_json, a.src, a.dossiers
+                FROM amendment_mep am
+                JOIN amendments a ON a.id = am.amendment_id
+                WHERE am.mep_id = ? AND a.term = ?
+                ORDER BY a.date DESC, a.id DESC
+                LIMIT ? OFFSET ?
+                """,
+                (mep_id, term, limit, offset),
+            ).fetchall()
+
+            data = []
+            for row in records:
+                data.append({
+                    'seq': row['seq'],
+                    'date': row['date'],
+                    'reference': row['reference'],
+                    'title': row['title'],
+                    'committee': _parse_json_field(row['committee']),
+                    'location': _parse_json_field(row['location']),
+                    'authors': _parse_authors(row['authors']),
+                    'new': _parse_json_field(row['new_json']),
+                    'old': _parse_json_field(row['old_json']),
+                    'src': row['src'],
+                    'dossiers': _parse_json_field(row['dossiers']),
+                })
+
+            return jsonify({
+                'success': True,
+                'category': 'amendments',
+                'mep_id': mep_id,
+                'term': term,
+                'total_count': total,
+                'offset': offset,
+                'limit': limit,
+                'has_more': total > offset + limit,
+                'data': data,
+            })
+
         matches: List[Dict] = []
         total = 0
         for amendment in _iter_amendments_for_mep(mep_id, term):

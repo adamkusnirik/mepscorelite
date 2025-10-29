@@ -58,3 +58,10 @@ data/parltrack/**/*.json
 
 # Node modules
 node_modules/ 
+
+# Generated amendment index database
+data/amendments_index.db
+
+# Local Claude settings
+.claude/
+
