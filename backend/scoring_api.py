@@ -257,14 +257,54 @@ def _load_mep_activities_map(term: int) -> Dict[str, Dict]:
     return {}
 
 
-def _find_mep_activities(mep_id: int, term: int) -> Optional[Dict]:
+def _find_mep_activities(mep_id: int, term: int, use_cache: bool = False) -> Optional[Dict]:
+    """Find MEP activities by streaming through the file or using cache.
+
+    Args:
+        mep_id: The MEP ID to search for
+        term: The parliamentary term
+        use_cache: If True, load entire file into memory for faster subsequent lookups
+
+    Returns:
+        Dict of MEP activities if found, None otherwise
+    """
     mep_id_str = str(mep_id)
-    try:
-        activities_map = _load_mep_activities_map(term)
-    except Exception as exc:  # pragma: no cover
-        app.logger.error("Unable to load activities for term %s: %s", term, exc)
-        return None
-    return activities_map.get(mep_id_str)
+
+    # Try cache first if available
+    candidates = (
+        _get_term_file("ep_mep_activities", term),
+        PARLTRACK_DIR / "ep_mep_activities.json",
+    )
+
+    for candidate in candidates:
+        resolved = resolve_json_path(candidate)
+        if not resolved.exists():
+            continue
+
+        cache_key = str(resolved)
+
+        # Check if we have cached data
+        cached_map = _MEP_ACTIVITIES_CACHE.get(cache_key)
+        if cached_map is not None:
+            cached_mtime = _MEP_ACTIVITIES_CACHE_MTIME.get(cache_key)
+            current_mtime = resolved.stat().st_mtime
+            if cached_mtime == current_mtime:
+                app.logger.debug("Using cached activities for MEP %s", mep_id_str)
+                return cached_map.get(mep_id_str)
+
+        # Stream through file to find the MEP (memory efficient)
+        try:
+            app.logger.debug("Streaming activities file to find MEP %s", mep_id_str)
+            for record in _safe_stream_json_items(resolved):
+                if str(record.get("mep_id")) == mep_id_str:
+                    return record
+        except FileNotFoundError:
+            continue
+        except Exception as exc:
+            app.logger.error("Error streaming activities: %s", exc)
+            continue
+
+    return None
 
 
 def _fallback_stream_json_items(path: Path | str) -> Iterator[Dict]:
