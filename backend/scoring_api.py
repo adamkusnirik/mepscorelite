@@ -3,26 +3,54 @@
 
 from __future__ import annotations
 
+import io
 import json
+import os
 import sqlite3
 import threading
 import zlib
 from pathlib import Path
 from typing import Dict, Iterable, Iterator, List, Optional
 
+import zstandard as zstd
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+from werkzeug.exceptions import HTTPException
 
 try:
     from .mep_score_scorer import MEPScoreScorer
-    from .file_utils import stream_json_items
+    from .file_utils import load_json_auto, resolve_json_path, stream_json_items
 except ImportError:  # pragma: no cover
     from mep_score_scorer import MEPScoreScorer  # type: ignore
-    from file_utils import stream_json_items  # type: ignore
+    from file_utils import load_json_auto, resolve_json_path, stream_json_items  # type: ignore
 
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, origins=[
+    "https://mepscorelite.vercel.app",
+    "http://localhost:*",
+    "http://127.0.0.1:*"
+])
+
+@app.errorhandler(Exception)
+def _json_error_handler(exc: Exception):
+    """Return JSON errors so browsers still see CORS headers on failures."""
+    if isinstance(exc, HTTPException):
+        response = exc.get_response()
+        response.data = json.dumps({
+            'success': False,
+            'error': exc.description,
+        })
+        response.content_type = 'application/json'
+        return response
+
+    app.logger.exception("Unhandled exception: %s", exc)
+    response = jsonify({
+        'success': False,
+        'error': 'Internal server error',
+    })
+    response.status_code = 500
+    return response
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 DATA_DIR = BASE_DIR / "data"
@@ -43,6 +71,9 @@ TERM_YEAR_RANGES = {
 AMENDMENTS_DB_PATH = DATA_DIR / "amendments_index.db"
 _amendments_conn: Optional[sqlite3.Connection] = None
 _amendments_lock = threading.Lock()
+
+_MEP_ACTIVITIES_CACHE: Dict[str, Dict[str, Dict]] = {}
+_MEP_ACTIVITIES_CACHE_MTIME: Dict[str, float] = {}
 
 
 def _ensure_amendments_connection() -> Optional[sqlite3.Connection]:
@@ -143,20 +174,178 @@ def _extract_year(date_str: Optional[str]) -> Optional[int]:
         return None
 
 
-def _find_mep_activities(mep_id: int, term: int) -> Optional[Dict]:
-    mep_id_str = str(mep_id)
+def _safe_stream_json_items(path: Path | str) -> Iterator[Dict]:
+    """Yield items from a ParlTrack JSON blob, preferring the resilient parser for zstd."""
+    resolved = resolve_json_path(path)
+    if not resolved.exists():
+        raise FileNotFoundError(f"JSON file not found: {path}")
+
+    prefer_fallback = os.getenv("MEPSCORE_SAFE_STREAM", "0") == "1"
+    if prefer_fallback:
+        yield from _fallback_stream_json_items(resolved)
+        return
+
+    try:
+        yield from stream_json_items(resolved)
+    except Exception as exc:  # pragma: no cover
+        app.logger.warning(
+            "stream_json_items failed for %s: %s; switching to fallback parser",
+            resolved,
+            exc,
+        )
+        yield from _fallback_stream_json_items(resolved)
+
+
+def _load_mep_activities_map(term: int) -> Dict[str, Dict]:
+    """Load and cache the activities dataset for the requested term.
+
+    Prioritizes term-specific files to reduce load time and memory usage.
+    """
+    errors: List[Exception] = []
+
+    # Prioritize term-specific file first (much smaller and faster)
     candidates = (
         _get_term_file("ep_mep_activities", term),
         PARLTRACK_DIR / "ep_mep_activities.json",
     )
+
     for candidate in candidates:
-        try:
-            for record in stream_json_items(candidate):
-                if str(record.get("mep_id")) == mep_id_str:
-                    return record
-        except FileNotFoundError:
+        resolved = resolve_json_path(candidate)
+        if not resolved.exists():
+            app.logger.debug("Candidate file not found: %s", resolved)
             continue
-    return None
+
+        cache_key = str(resolved)
+        mtime = resolved.stat().st_mtime
+        cached_map = _MEP_ACTIVITIES_CACHE.get(cache_key)
+        cached_mtime = _MEP_ACTIVITIES_CACHE_MTIME.get(cache_key)
+
+        if cached_map is not None and cached_mtime == mtime:
+            app.logger.debug("Using cached activities map from %s", resolved)
+            return cached_map
+
+        app.logger.info("Loading activities from %s (%.1f MB)",
+                       resolved, resolved.stat().st_size / 1024 / 1024)
+
+        try:
+            data = load_json_auto(resolved)
+        except Exception as exc:  # pragma: no cover
+            errors.append(exc)
+            app.logger.error("Failed to load %s: %s", resolved, exc)
+            continue
+
+        if not isinstance(data, list):
+            app.logger.error("Unexpected dataset format in %s", resolved)
+            continue
+
+        mapping: Dict[str, Dict] = {}
+        for entry in data:
+            mep_key = entry.get("mep_id")
+            if mep_key is None:
+                continue
+            mapping[str(mep_key)] = entry
+
+        _MEP_ACTIVITIES_CACHE[cache_key] = mapping
+        _MEP_ACTIVITIES_CACHE_MTIME[cache_key] = mtime
+        app.logger.info("Cached %d MEP activity records from %s", len(mapping), resolved)
+        return mapping
+
+    if errors:
+        raise errors[-1]
+
+    app.logger.warning("No activities file found for term %s", term)
+    return {}
+
+
+def _find_mep_activities(mep_id: int, term: int) -> Optional[Dict]:
+    mep_id_str = str(mep_id)
+    try:
+        activities_map = _load_mep_activities_map(term)
+    except Exception as exc:  # pragma: no cover
+        app.logger.error("Unable to load activities for term %s: %s", term, exc)
+        return None
+    return activities_map.get(mep_id_str)
+
+
+def _fallback_stream_json_items(path: Path | str) -> Iterator[Dict]:
+    """Stream JSON array items without ijson for environments where zstd chunks break."""
+    resolved = resolve_json_path(path)
+    if not resolved.exists():
+        raise FileNotFoundError(f"JSON file not found: {path}")
+
+    def _iter_stream(text_stream: io.TextIOBase) -> Iterator[Dict]:
+        started = False
+        depth = 0
+        in_string = False
+        escape = False
+        buffer_chars: List[str] = []
+
+        while True:
+            chunk = text_stream.read(65536)
+            if not chunk:
+                break
+            for ch in chunk:
+                if not started:
+                    if ch.isspace():
+                        continue
+                    if ch == "[":
+                        started = True
+                        continue
+                    # Ignore unexpected characters before the array begins
+                    continue
+
+                if depth == 0:
+                    if ch.isspace() or ch == ",":
+                        continue
+                    if ch == "]":
+                        return
+                    if ch == "{":
+                        buffer_chars = ["{"]
+                        depth = 1
+                        in_string = False
+                        escape = False
+                    # Ignore any other separators
+                    continue
+
+                buffer_chars.append(ch)
+
+                if in_string:
+                    if escape:
+                        escape = False
+                    elif ch == "\\":
+                        escape = True
+                    elif ch == '"':
+                        in_string = False
+                else:
+                    if ch == '"':
+                        in_string = True
+                    elif ch == "{":
+                        depth += 1
+                    elif ch == "}":
+                        depth -= 1
+                        if depth == 0:
+                            obj_text = "".join(buffer_chars)
+                            try:
+                                yield json.loads(obj_text)
+                            except json.JSONDecodeError as decode_exc:
+                                app.logger.error(
+                                    "Fallback parser failed to decode JSON object: %s",
+                                    decode_exc,
+                                )
+                            buffer_chars = []
+
+    if resolved.suffix == ".zst":
+        with resolved.open("rb") as raw:
+            reader = zstd.ZstdDecompressor().stream_reader(raw)
+            text_stream = io.TextIOWrapper(reader, encoding="utf-8")
+            try:
+                yield from _iter_stream(text_stream)
+            finally:
+                text_stream.close()
+                reader.close()
+    else:
+        with resolved.open("r", encoding="utf-8") as handle:
+            yield from _iter_stream(handle)
 
 
 def _iter_amendments_for_mep(mep_id: int, term: int) -> Iterator[Dict]:
@@ -168,7 +357,7 @@ def _iter_amendments_for_mep(mep_id: int, term: int) -> Iterator[Dict]:
     )
     for candidate in candidates:
         try:
-            for amendment in stream_json_items(candidate):
+            for amendment in _safe_stream_json_items(candidate):
                 mep_list = amendment.get("meps") or []
                 if _matches_mep(mep_list, mep_id_str):
                     if "_term" in candidate.name:
@@ -183,8 +372,25 @@ def _iter_amendments_for_mep(mep_id: int, term: int) -> Iterator[Dict]:
             continue
 
 
+def _normalize_date_for_sorting(value: Optional[object]) -> str:
+    """Coerce optional date-like values into a comparable string."""
+    if value is None:
+        return ""
+    if isinstance(value, str):
+        return value
+    return str(value)
+
+
+def _activity_date_key(item: Dict) -> str:
+    """Return a sort key that tolerates missing or null date fields."""
+    primary = item.get('date')
+    if not primary:
+        primary = item.get('Date opened')
+    return _normalize_date_for_sorting(primary)
+
+
 def _motion_sort_key(item: Dict) -> str:
-    return item.get('Date opened') or item.get('date', '')
+    return _activity_date_key(item)
 
 
 @app.route('/api/score', methods=['GET', 'POST'])
@@ -206,9 +412,12 @@ def get_scores():
 @app.route('/api/mep/<int:mep_id>/category/<category>', methods=['GET'])
 def get_mep_category_details(mep_id: int, category: str):
     """Return detailed activity entries for a MEP without caching huge datasets."""
-    term = int(request.args.get('term', 10))
-    offset = int(request.args.get('offset', 0))
-    limit = int(request.args.get('limit', 15))
+    try:
+        term = int(request.args.get('term', 10))
+        offset = int(request.args.get('offset', 0))
+        limit = int(request.args.get('limit', 15))
+    except ValueError as exc:
+        return jsonify({'success': False, 'error': f'Invalid parameter: {exc}'}), 400
 
     if category == 'amendments':
         conn = _ensure_amendments_connection()
@@ -284,8 +493,16 @@ def get_mep_category_details(mep_id: int, category: str):
             'data': matches
         })
 
-    mep_data = _find_mep_activities(mep_id, term)
+    app.logger.info("Loading MEP %s data for category %s (term %s)", mep_id, category, term)
+
+    try:
+        mep_data = _find_mep_activities(mep_id, term)
+    except Exception as exc:
+        app.logger.error("Failed to load MEP %s activities: %s", mep_id, exc)
+        return jsonify({'success': False, 'error': 'Failed to load MEP data'}), 500
+
     if not mep_data:
+        app.logger.warning("MEP %s not found in term %s dataset", mep_id, term)
         return jsonify({'success': False, 'error': 'MEP not found'}), 404
 
     if category == 'speeches':
@@ -295,15 +512,15 @@ def get_mep_category_details(mep_id: int, category: str):
             and 'One-minute speeches' not in item.get('title', '')
             and item.get('term', 0) == term
         ]
-        filtered.sort(key=lambda x: x.get('date', ''), reverse=True)
+        filtered.sort(key=_activity_date_key, reverse=True)
 
     elif category in {'questions', 'questions_written'}:
         filtered = [item for item in mep_data.get('WQ', []) if item.get('term', 0) == term]
-        filtered.sort(key=lambda x: x.get('date', ''), reverse=True)
+        filtered.sort(key=_activity_date_key, reverse=True)
 
     elif category == 'questions_oral':
         filtered = [item for item in mep_data.get('OQ', []) if item.get('term', 0) == term]
-        filtered.sort(key=lambda x: x.get('date', ''), reverse=True)
+        filtered.sort(key=_activity_date_key, reverse=True)
 
     elif category == 'motions':
         motions: List[Dict] = []
@@ -317,7 +534,7 @@ def get_mep_category_details(mep_id: int, category: str):
             item for item in mep_data.get('CRE', [])
             if 'Explanations of vote' in item.get('title', '') and item.get('term', 0) == term
         ]
-        filtered.sort(key=lambda x: x.get('date', ''), reverse=True)
+        filtered.sort(key=_activity_date_key, reverse=True)
 
     else:
         key_map = {
@@ -330,7 +547,7 @@ def get_mep_category_details(mep_id: int, category: str):
         if not bucket:
             return jsonify({'success': False, 'error': 'Unknown category'}), 400
         filtered = [item for item in mep_data.get(bucket, []) if item.get('term', 0) == term]
-        filtered.sort(key=lambda x: x.get('date', ''), reverse=True)
+        filtered.sort(key=_activity_date_key, reverse=True)
 
     paginated = filtered[offset:offset + limit]
     return jsonify({
@@ -355,6 +572,23 @@ def health_check():
         return jsonify({'success': True, 'status': 'ok'})
     except FileNotFoundError as exc:
         return jsonify({'success': False, 'status': 'error', 'error': str(exc)}), 500
+
+
+@app.route('/api/warmup', methods=['GET'])
+def warmup_cache():
+    """Preload activities data into memory cache to speed up first requests."""
+    term = int(request.args.get('term', 10))
+    try:
+        app.logger.info("Warming up cache for term %s", term)
+        activities_map = _load_mep_activities_map(term)
+        return jsonify({
+            'success': True,
+            'message': f'Cache warmed for term {term}',
+            'mep_count': len(activities_map)
+        })
+    except Exception as exc:
+        app.logger.error("Cache warmup failed: %s", exc)
+        return jsonify({'success': False, 'error': str(exc)}), 500
 
 
 if __name__ == '__main__':  # pragma: no cover
